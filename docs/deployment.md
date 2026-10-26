@@ -1,0 +1,24 @@
+# Hostinger Deployment
+
+Ministry Hub is deployed as one Node.js web application. Next.js serves the user interface and Express serves the API under `/api`, so both use a single domain:
+
+- Website: `https://your-domain.com`
+- API: `https://your-domain.com/api`
+- Health check: `https://your-domain.com/api/health`
+
+## Hostinger settings
+
+Deploy the repository as a single Node.js application and keep the root directory set to the repository root (`./`) so npm can install both workspaces.
+
+Use these application settings:
+
+- Node.js version: 20.x or 22.x
+- Build command: `npm run build`
+- Start command: `npm start`
+- Entry file, if Hostinger requests one: `backend/src/server.js`
+- Environment variable: `NODE_ENV=production`
+- Environment variable: `DATABASE_URL=<production database connection>`
+
+Do not create a separate Hostinger website or subdomain for the backend. The single Node.js process starts Express and delegates all non-API requests to the built Next.js application.
+
+Hostinger supplies the listening port through the `PORT` environment variable. Do not assign a production port manually.
