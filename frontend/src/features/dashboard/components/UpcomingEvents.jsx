@@ -1,4 +1,4 @@
-import { CalendarDays, Clock3, MapPin } from "lucide-react";
+import { Clock3, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function UpcomingEvents({ data }) {
@@ -8,7 +8,7 @@ export function UpcomingEvents({ data }) {
       <CardContent className="space-y-1">
         {data.map((event) => (
           <div key={event.id} className="flex gap-3 border-b py-4 first:pt-0 last:border-0 last:pb-0">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><CalendarDays className="size-5" /></div>
+            <div className="flex w-12 shrink-0 flex-col items-center justify-center self-start overflow-hidden rounded-lg border bg-card"><span className="w-full bg-primary py-1 text-center text-[10px] font-bold uppercase text-primary-foreground">{event.date.split(" ")[0]}</span><span className="py-1 text-xl font-extrabold tabular-nums">{event.date.split(" ")[1]}</span></div>
             <div className="min-w-0">
               <p className="font-medium">{event.name}</p>
               <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">

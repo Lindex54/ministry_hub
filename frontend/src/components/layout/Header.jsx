@@ -32,7 +32,7 @@ export function Header() {
     .join(" ");
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
+    <header className="sticky top-2 z-20 mx-3 mt-2 mb-3 flex h-20 shrink-0 items-center gap-3 rounded-xl bg-header px-4 shadow-(--header-shadow) sm:mx-5 sm:px-6 lg:mx-8">
       <SidebarTrigger />
       <Separator orientation="vertical" className="h-4" />
       <Breadcrumb className="flex-1">

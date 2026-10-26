@@ -22,10 +22,10 @@ export function QuickActions() {
   return (
     <Card className="xl:col-span-3">
       <CardHeader><CardTitle>Quick Actions</CardTitle><CardDescription>Shortcuts to common administration tasks.</CardDescription></CardHeader>
-      <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <CardContent className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {actions.map((action) => (
-          <Button key={action.label} variant="outline" className="h-auto justify-start py-3" onClick={() => showPlaceholder(action.label)}>
-            <action.icon />{action.label}
+          <Button key={action.label} variant="outline" className="h-auto flex-col gap-3 whitespace-normal rounded-xl bg-muted/30 px-2 py-5 text-xs hover:border-primary/40 hover:bg-primary/5" onClick={() => showPlaceholder(action.label)}>
+            <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><action.icon className="size-5" /></span>{action.label}
           </Button>
         ))}
       </CardContent>

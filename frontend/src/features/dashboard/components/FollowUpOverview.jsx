@@ -1,18 +1,18 @@
 import { CalendarClock, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function FollowUpOverview({ data }) {
   return (
     <Card className="xl:col-span-2">
-      <CardHeader className="flex-row items-center justify-between">
-        <CardTitle>Follow-ups Requiring Attention</CardTitle>
-        <Button variant="outline" size="sm">View All Follow-ups</Button>
+      <CardHeader className="flex flex-wrap items-center justify-between gap-3">
+        <div><CardTitle>People to connect with</CardTitle><p className="mt-2 text-xs text-muted-foreground">Small conversations. Lasting connections.</p></div>
+        <Badge variant="secondary">{data.length} highlighted</Badge>
       </CardHeader>
       <CardContent className="space-y-1">
         {data.map((item) => (
-          <div key={item.id} className="flex flex-col gap-3 border-b py-4 last:border-0 sm:flex-row sm:items-center">
+          <div key={item.id} className="relative flex flex-col gap-3 border-l-2 border-primary/20 py-4 pl-5 last:pb-0 sm:flex-row sm:items-center">
+            <span className={`absolute top-5 -left-[6px] size-2.5 rounded-full ring-4 ring-card ${item.status === "Overdue" ? "bg-warning" : "bg-primary"}`} />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-medium">{item.name}</p>

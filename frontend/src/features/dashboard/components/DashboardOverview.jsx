@@ -12,6 +12,7 @@ import { MembershipGrowth } from "./MembershipGrowth";
 import { QuickActions } from "./QuickActions";
 import { RecentAttendance } from "./RecentAttendance";
 import { UpcomingEvents } from "./UpcomingEvents";
+import { ServiceAttendance } from "./ServiceAttendance";
 import { defaultDashboardRange, getDashboardData } from "../data/dashboard.mock";
 
 export function DashboardOverview() {
@@ -19,25 +20,26 @@ export function DashboardOverview() {
   const dashboard = useMemo(() => getDashboardData(dateRange), [dateRange]);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 lg:gap-8">
+    <div className="material-dashboard mx-auto flex w-full max-w-[1600px] flex-col gap-8">
       <PageHeader
-        title="Dashboard Overview"
-        description="Monitor your congregation, attendance, outreach, and church activities."
+        title="Your church, at a glance"
+        description="Welcome back. Here’s what’s happening in your community."
         actions={<DateRangePicker value={dateRange} onChange={(range) => range && setDateRange(range)} />}
       />
 
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Badge variant="outline">Demonstration data</Badge>
         <span>Dashboard values are mock data and are not connected to a live API.</span>
       </div>
 
-      <FadeIn>
+      <FadeIn className="mt-3">
         <DashboardStats stats={dashboard.stats} />
       </FadeIn>
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="mt-5 grid gap-x-5 gap-y-10 lg:grid-cols-3">
         <AttendanceTrends data={dashboard.attendance} />
         <MembershipGrowth data={dashboard.membership} />
+        <ServiceAttendance data={[...dashboard.recentAttendance].reverse()} />
       </div>
 
       <div className="grid items-start gap-4 xl:grid-cols-5">

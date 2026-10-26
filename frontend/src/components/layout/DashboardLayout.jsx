@@ -8,7 +8,7 @@ export function DashboardLayout({ children }) {
       <AppSidebar />
       <SidebarInset>
         <Header />
-        <div className="flex flex-1 flex-col p-4 sm:p-6 lg:p-8">{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-6 lg:px-8 lg:pt-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

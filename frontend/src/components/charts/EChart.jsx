@@ -48,7 +48,7 @@ export function EChart({ option, loading = false, empty = false, className, heig
         textStyle: { color: colors.text },
         ...option.tooltip,
       },
-      legend: { textStyle: { color: colors.muted }, ...option.legend },
+      legend: option.legend ? { textStyle: { color: colors.muted }, ...option.legend } : { show: false },
       xAxis: mergeAxis(option.xAxis),
       yAxis: mergeAxis(option.yAxis),
     };

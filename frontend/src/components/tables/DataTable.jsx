@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -58,17 +58,17 @@ export function DataTable({
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-lg border">
+      <div className="overflow-hidden rounded-xl">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} aria-sort={header.column.getIsSorted() === "asc" ? "ascending" : header.column.getIsSorted() === "desc" ? "descending" : undefined}>
                     {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                      <Button variant="ghost" size="sm" className="-ml-3" onClick={header.column.getToggleSortingHandler()}>
+                      <Button variant="ghost" size="sm" className="-ml-3 text-xs font-semibold hover:bg-primary/10 hover:text-primary" onClick={header.column.getToggleSortingHandler()}>
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                        <ChevronDown className="size-3.5" />
+                        {header.column.getIsSorted() === "asc" ? <ArrowUp className="size-3.5" /> : header.column.getIsSorted() === "desc" ? <ArrowDown className="size-3.5" /> : <ArrowUpDown className="size-3 opacity-40" />}
                       </Button>
                     ) : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
@@ -78,7 +78,7 @@ export function DataTable({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.length ? table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+              <TableRow key={row.id} className="even:bg-primary/[0.025]" data-state={row.getIsSelected() && "selected"}>
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                 ))}
@@ -90,7 +90,7 @@ export function DataTable({
         </Table>
       </div>
 
-      <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 px-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <span>
           {enableSelection
             ? `${table.getFilteredSelectedRowModel().rows.length} of ${table.getFilteredRowModel().rows.length} row(s) selected.`

@@ -67,8 +67,8 @@ export function AppSidebar(props) {
   const pathname = usePathname();
 
   return (
-    <ShadcnSidebar collapsible="icon" {...props}>
-      <SidebarHeader className="border-b border-sidebar-border">
+    <ShadcnSidebar variant="sidebar" collapsible="icon" {...props}>
+      <SidebarHeader className="border-b border-sidebar-border py-4">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild tooltip="Ministry Hub">
@@ -102,7 +102,7 @@ export function AppSidebar(props) {
                         asChild
                         isActive={isActive}
                         tooltip={item.title}
-                        className="data-[active=true]:border-l-2 data-[active=true]:border-sidebar-primary data-[active=true]:bg-sidebar-primary/10 data-[active=true]:text-sidebar-primary"
+                        className="h-10 rounded-lg data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-md data-[active=true]:shadow-primary/20"
                       >
                         <Link href={item.href}>
                           <item.icon />
