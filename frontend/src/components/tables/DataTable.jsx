@@ -66,7 +66,7 @@ export function DataTable({
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id} aria-sort={header.column.getIsSorted() === "asc" ? "ascending" : header.column.getIsSorted() === "desc" ? "descending" : undefined}>
                     {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                      <Button variant="ghost" size="sm" className="-ml-3 text-xs font-semibold hover:bg-primary/10 hover:text-primary" onClick={header.column.getToggleSortingHandler()}>
+                      <Button type="button" variant="ghost" size="sm" className="-ml-3 text-xs font-semibold hover:bg-primary/10 hover:text-primary" onClick={header.column.getToggleSortingHandler()}>
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getIsSorted() === "asc" ? <ArrowUp className="size-3.5" /> : header.column.getIsSorted() === "desc" ? <ArrowDown className="size-3.5" /> : <ArrowUpDown className="size-3 opacity-40" />}
                       </Button>
@@ -98,8 +98,8 @@ export function DataTable({
         </span>
         <div className="flex items-center gap-2">
           <span>Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}</span>
-          <Button variant="outline" size="icon-sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} aria-label="Previous page"><ChevronLeft /></Button>
-          <Button variant="outline" size="icon-sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} aria-label="Next page"><ChevronRight /></Button>
+          <Button type="button" variant="outline" size="icon-sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} aria-label="Previous page"><ChevronLeft /></Button>
+          <Button type="button" variant="outline" size="icon-sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} aria-label="Next page"><ChevronRight /></Button>
         </div>
       </div>
     </div>

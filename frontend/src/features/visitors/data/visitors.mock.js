@@ -104,5 +104,7 @@ export function getLatestFollowUp(visitor) {
 }
 
 export function getFollowUpStatus(visitor) {
+  if (visitor.followUps.some((item) => item.status === "In Progress")) return "In Progress";
+  if (visitor.followUps.some((item) => item.status === "Pending")) return "Pending";
   return getLatestFollowUp(visitor)?.status ?? "Not Scheduled";
 }

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVisitors } from "../VisitorsProvider";
+import { useOutreach } from "@/features/outreach/OutreachProvider";
 import { followUpStatuses, getFirstVisit, getFollowUpStatus, getLatestVisit, getVisitType, getVisitorName, serviceOptions } from "../data/visitors.mock";
 import { FollowUpStatusBadge, VisitTypeBadge } from "./VisitorBadges";
 
@@ -17,7 +18,9 @@ function formatDate(value) {
 }
 
 export function VisitorsTable() {
-  const { visitors } = useVisitors();
+  const { visitors: sourceVisitors } = useVisitors();
+  const { getPersonTasks } = useOutreach();
+  const visitors = sourceVisitors.map((visitor) => ({ ...visitor, followUps: getPersonTasks(`visitor:${visitor.id}`).map((task) => ({ ...task, date: task.scheduledDate })) }));
   const [visitType, setVisitType] = useState("all");
   const [followUpStatus, setFollowUpStatus] = useState("all");
   const [service, setService] = useState("all");

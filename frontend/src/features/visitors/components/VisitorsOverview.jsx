@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Download, RotateCcw, UserPlus, Users, UserRoundCheck } from "lucide-react";
+import { Upload, RotateCcw, UserPlus, Users, UserRoundCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { FadeIn } from "@/components/shared/Motion";
 import { PageHeader, ResponsiveGrid } from "@/components/shared/PageHeader";
 import { StatCard } from "@/components/shared/StatCard";
 import { useVisitors } from "../VisitorsProvider";
+import { useOutreach } from "@/features/outreach/OutreachProvider";
 import { getFirstVisit, getFollowUpStatus, getLatestVisit, getVisitType, getVisitorName } from "../data/visitors.mock";
 import { VisitorsTable } from "./VisitorsTable";
 
@@ -18,7 +19,9 @@ function csvCell(value) {
 }
 
 export function VisitorsOverview() {
-  const { visitors } = useVisitors();
+  const { visitors: sourceVisitors } = useVisitors();
+  const { getPersonTasks } = useOutreach();
+  const visitors = sourceVisitors.map((visitor) => ({ ...visitor, followUps: getPersonTasks(`visitor:${visitor.id}`).map((task) => ({ ...task, date: task.scheduledDate })) }));
   const stats = {
     total: visitors.length,
     newVisitors: visitors.filter((visitor) => getVisitType(visitor) === "New").length,
@@ -39,7 +42,7 @@ export function VisitorsOverview() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8">
-      <PageHeader title="Visitors" description="Welcome visitors, record their attendance, and coordinate thoughtful follow-up." actions={<><Button variant="outline" onClick={exportVisitors}><Download />Export visitors</Button><Button asChild><Link href="/visitors/new"><UserPlus />Register visitor</Link></Button></>} />
+      <PageHeader title="Visitors" description="Welcome visitors, record their attendance, and coordinate thoughtful follow-up." actions={<><Button variant="outline" className="border-primary/30 text-foreground hover:border-primary/60 hover:bg-primary/10 hover:text-foreground dark:hover:bg-primary/15" onClick={exportVisitors}><Upload />Export visitors</Button><Button asChild><Link href="/visitors/new"><UserPlus />Register visitor</Link></Button></>} />
       <Alert className="border-primary/20 bg-primary/5"><Users /><AlertTitle>Demonstration data</AlertTitle><AlertDescription>Visitor changes work across these pages, but are kept only in memory and reset when the browser is refreshed. No messages are sent.</AlertDescription></Alert>
       <FadeIn><ResponsiveGrid>
         <StatCard title="Total visitors" value={stats.total.toLocaleString()} detail="Unique visitor records" icon={Users} />

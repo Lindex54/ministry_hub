@@ -3,7 +3,7 @@
 import { format } from "date-fns";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { CalendarPlus, ClipboardPlus } from "lucide-react";
+import { CalendarPlus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -13,11 +13,11 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { TaskAssignmentDialog } from "@/features/outreach/components/TaskDialogs";
 import { useVisitors } from "../VisitorsProvider";
-import { churchWorkers, contactMethods, followUpStatuses, serviceOptions } from "../data/visitors.mock";
+import { serviceOptions } from "../data/visitors.mock";
 
 const visitSchema = z.object({ date: z.string().min(1, "Visit date is required."), service: z.string().min(1, "Service attended is required."), notes: z.string().trim() });
-const followUpSchema = z.object({ date: z.string().min(1, "Follow-up date is required."), assignedTo: z.string().min(1, "Assign a church worker."), contactMethod: z.string().min(1, "Choose a contact method."), status: z.string(), outcome: z.string().trim() });
 
 function ErrorMessage({ error }) { return error ? <FieldError errors={[error]} /> : null; }
 
@@ -29,8 +29,5 @@ export function RecordVisitDialog({ visitor }) {
 }
 
 export function AddFollowUpDialog({ visitor }) {
-  const [open, setOpen] = useState(false); const { addFollowUp } = useVisitors();
-  const form = useForm({ resolver: zodResolver(followUpSchema), defaultValues: { date: format(new Date(), "yyyy-MM-dd"), assignedTo: "", contactMethod: "", status: "Pending", outcome: "" } });
-  function submit(values) { addFollowUp(visitor.id, values); toast.success("Mock follow-up activity recorded. No message was sent."); setOpen(false); form.reset({ date: format(new Date(), "yyyy-MM-dd"), assignedTo: "", contactMethod: "", status: "Pending", outcome: "" }); }
-  return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button disabled={!visitor.permissionToContact} title={visitor.permissionToContact ? undefined : "Communication consent is required"}><ClipboardPlus />Add follow-up</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Add visitor follow-up</DialogTitle><DialogDescription>Assign and track a follow-up activity. This mock workflow does not send a real message.</DialogDescription></DialogHeader><form className="space-y-4" onSubmit={form.handleSubmit(submit)} noValidate><Controller name="assignedTo" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel>Assigned worker <span className="text-destructive">*</span></FieldLabel><Select value={field.value || undefined} onValueChange={field.onChange}><SelectTrigger className="w-full" aria-invalid={fieldState.invalid}><SelectValue placeholder="Choose worker" /></SelectTrigger><SelectContent>{churchWorkers.map((worker) => <SelectItem key={worker} value={worker}>{worker}</SelectItem>)}</SelectContent></Select><ErrorMessage error={fieldState.error} /></Field>} /><div className="grid gap-4 sm:grid-cols-2"><Controller name="date" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel htmlFor="follow-date">Follow-up date <span className="text-destructive">*</span></FieldLabel><Input {...field} id="follow-date" type="date" aria-invalid={fieldState.invalid} /><ErrorMessage error={fieldState.error} /></Field>} /><Controller name="contactMethod" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel>Contact method <span className="text-destructive">*</span></FieldLabel><Select value={field.value || undefined} onValueChange={field.onChange}><SelectTrigger className="w-full" aria-invalid={fieldState.invalid}><SelectValue placeholder="Choose method" /></SelectTrigger><SelectContent>{contactMethods.map((method) => <SelectItem key={method} value={method} disabled={method === "Email" && !visitor.email}>{method}</SelectItem>)}</SelectContent></Select><ErrorMessage error={fieldState.error} /></Field>} /></div><Controller name="status" control={form.control} render={({ field }) => <Field><FieldLabel>Status</FieldLabel><Select value={field.value} onValueChange={field.onChange}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent>{followUpStatuses.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select></Field>} /><Controller name="outcome" control={form.control} render={({ field }) => <Field><FieldLabel htmlFor="follow-outcome">Outcome / notes</FieldLabel><Textarea {...field} id="follow-outcome" placeholder="Optional result or next step" /><FieldDescription>Use this field to record the outcome after contact.</FieldDescription></Field>} /><DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit">Save follow-up</Button></DialogFooter></form></DialogContent></Dialog>;
+  return <TaskAssignmentDialog personKey={`visitor:${visitor.id}`} />;
 }
