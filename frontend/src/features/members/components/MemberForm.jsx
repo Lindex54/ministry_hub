@@ -23,6 +23,7 @@ function isUgandanPhone(value) {
 const optionalPhone = z.string().trim().refine(isUgandanPhone, "Enter a valid Ugandan phone number, such as 0772 123 456 or +256 772 123 456.");
 
 export const memberSchema = z.object({
+  sourceVisitorId: z.string().optional(),
   membershipNumber: z.string(),
   firstName: z.string().trim().min(1, "First name is required."),
   lastName: z.string().trim().min(1, "Last name is required."),
@@ -38,13 +39,14 @@ export const memberSchema = z.object({
   branch: z.string().min(1, "Church branch is required."),
   dateJoined: z.string(),
   status: z.string(),
-  ministries: z.array(z.string()),
+  ministries: z.array(z.string()).min(1, "Select at least one ministry affiliation or choose None."),
   emergencyName: z.string().trim(),
   emergencyRelationship: z.string().trim(),
   emergencyPhone: optionalPhone,
 });
 
 export const emptyMemberValues = {
+  sourceVisitorId: undefined,
   membershipNumber: "",
   firstName: "",
   lastName: "",
@@ -189,9 +191,9 @@ export function MemberForm({ defaultValues, onSubmit, submitLabel = "Save member
             <FieldDescription>New members default to Active.</FieldDescription>
           </Field>
         )} />
-        <Controller name="ministries" control={form.control} render={({ field }) => (
-          <Field className="md:col-span-2">
-            <FieldLabel>Ministry affiliations</FieldLabel>
+        <Controller name="ministries" control={form.control} render={({ field, fieldState }) => (
+          <Field className="md:col-span-2" data-invalid={fieldState.invalid}>
+            <FieldLabel>Ministry affiliations <span className="text-destructive">*</span></FieldLabel>
             <div className="grid gap-3 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2 lg:grid-cols-3">
               {ministryOptions.map((ministry) => (
                 <label key={ministry} className="flex cursor-pointer items-center gap-2 text-sm">
@@ -213,6 +215,8 @@ export function MemberForm({ defaultValues, onSubmit, submitLabel = "Save member
                 </label>
               ))}
             </div>
+            <FieldDescription>Select every applicable ministry, or choose None for congregation-only members.</FieldDescription>
+            {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
           </Field>
         )} />
       </FormSection>
