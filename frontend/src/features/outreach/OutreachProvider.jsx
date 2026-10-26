@@ -5,6 +5,7 @@ import { useMembers } from "@/features/members/MembersProvider";
 import { useVisitors } from "@/features/visitors/VisitorsProvider";
 import { mockVisitors } from "@/features/visitors/data/visitors.mock";
 import { evangelismContacts, memberPreferences, templates, workers } from "./data/outreach.mock";
+import { useAttendance } from "@/features/attendance/AttendanceProvider";
 
 const OutreachContext = createContext(null);
 
@@ -24,7 +25,9 @@ function initialTasks() {
 
 export function OutreachProvider({ children }) {
   const { members } = useMembers();
-  const { visitors } = useVisitors();
+  const { visitors: sourceVisitors } = useVisitors();
+  const { getVisitorWithAttendance, getPersonAttendance } = useAttendance();
+  const visitors = sourceVisitors.map(getVisitorWithAttendance);
   const [tasks, setTasks] = useState(initialTasks);
   const [campaigns, setCampaigns] = useState([]);
   const [savedTemplates, setSavedTemplates] = useState(templates);
@@ -32,7 +35,7 @@ export function OutreachProvider({ children }) {
     ...members.map((member) => {
       const sourceVisitor = visitors.find((visitor) => visitor.convertedMemberId === member.id);
       const prefs = sourceVisitor ? { consent: sourceVisitor.permissionToContact, sms: true, email: true } : memberPreferences[member.id];
-      return { key: `member:${member.id}`, id: member.id, type: "Member", name: `${member.firstName} ${member.lastName}`, phone: member.primaryPhone, email: member.email, address: member.address, branch: member.branch, ministries: member.ministries, services: member.id === "member-001" || member.id === "member-002" ? ["Sunday Main Service"] : [], consent: prefs?.consent ?? false, preferences: { sms: prefs?.sms ?? false, email: prefs?.email ?? false }, href: `/members/${member.id}` };
+      return { key: `member:${member.id}`, id: member.id, type: "Member", name: `${member.firstName} ${member.lastName}`, phone: member.primaryPhone, email: member.email, address: member.address, branch: member.branch, ministries: member.ministries, services: [...new Set(getPersonAttendance(`member:${member.id}`).filter((item) => item.status === "Present").map((item) => item.service))], consent: prefs?.consent ?? false, preferences: { sms: prefs?.sms ?? false, email: prefs?.email ?? false }, href: `/members/${member.id}` };
     }),
     ...visitors.filter((visitor) => !visitor.convertedMemberId).map((visitor) => ({ key: `visitor:${visitor.id}`, id: visitor.id, type: "Visitor", name: `${visitor.firstName} ${visitor.lastName}`, phone: visitor.phone, email: visitor.email, address: visitor.districtAddress, branch: visitor.branch ?? "", ministries: [], services: [...new Set(visitor.visitHistory.map((visit) => visit.service))], consent: visitor.permissionToContact, preferences: { sms: visitor.communicationPreferences?.sms ?? true, email: visitor.communicationPreferences?.email ?? true }, href: `/visitors/${visitor.id}` })),
     ...evangelismContacts.map((contact) => ({ ...contact, key: `evangelism:${contact.id}`, type: "Evangelism contact", name: `${contact.firstName} ${contact.lastName}`, ministries: [], services: [], preferences: { sms: false, email: false }, href: `/follow-ups/contacts/${contact.id}` })),

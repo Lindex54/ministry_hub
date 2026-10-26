@@ -10,17 +10,20 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVisitors } from "../VisitorsProvider";
 import { useOutreach } from "@/features/outreach/OutreachProvider";
+import { useAttendance } from "@/features/attendance/AttendanceProvider";
 import { followUpStatuses, getFirstVisit, getFollowUpStatus, getLatestVisit, getVisitType, getVisitorName, serviceOptions } from "../data/visitors.mock";
 import { FollowUpStatusBadge, VisitTypeBadge } from "./VisitorBadges";
 
 function formatDate(value) {
+  if (!value) return "Not recorded";
   return new Intl.DateTimeFormat("en-UG", { dateStyle: "medium" }).format(new Date(`${value}T00:00:00`));
 }
 
 export function VisitorsTable() {
   const { visitors: sourceVisitors } = useVisitors();
   const { getPersonTasks } = useOutreach();
-  const visitors = sourceVisitors.map((visitor) => ({ ...visitor, followUps: getPersonTasks(`visitor:${visitor.id}`).map((task) => ({ ...task, date: task.scheduledDate })) }));
+  const { getVisitorWithAttendance } = useAttendance();
+  const visitors = sourceVisitors.map((visitor) => ({ ...getVisitorWithAttendance(visitor), followUps: getPersonTasks(`visitor:${visitor.id}`).map((task) => ({ ...task, date: task.scheduledDate })) }));
   const [visitType, setVisitType] = useState("all");
   const [followUpStatus, setFollowUpStatus] = useState("all");
   const [service, setService] = useState("all");
@@ -46,9 +49,9 @@ export function VisitorsTable() {
     { accessorKey: "phone", header: "Phone" },
     { accessorKey: "email", header: "Email", cell: ({ row }) => row.original.email || <span className="text-muted-foreground">Not provided</span> },
     { id: "visitType", accessorFn: getVisitType, header: "Visit type", cell: ({ row }) => <VisitTypeBadge type={getVisitType(row.original)} /> },
-    { id: "firstVisit", accessorFn: (visitor) => getFirstVisit(visitor)?.date, header: "First visit", cell: ({ row }) => formatDate(getFirstVisit(row.original).date) },
-    { id: "lastVisit", accessorFn: (visitor) => getLatestVisit(visitor)?.date, header: "Last visit", cell: ({ row }) => formatDate(getLatestVisit(row.original).date) },
-    { id: "service", accessorFn: (visitor) => getLatestVisit(visitor)?.service, header: "Latest service", cell: ({ row }) => getLatestVisit(row.original).service },
+    { id: "firstVisit", accessorFn: (visitor) => getFirstVisit(visitor)?.date, header: "First visit", cell: ({ row }) => formatDate(getFirstVisit(row.original)?.date) },
+    { id: "lastVisit", accessorFn: (visitor) => getLatestVisit(visitor)?.date, header: "Last visit", cell: ({ row }) => formatDate(getLatestVisit(row.original)?.date) },
+    { id: "service", accessorFn: (visitor) => getLatestVisit(visitor)?.service, header: "Latest service", cell: ({ row }) => getLatestVisit(row.original)?.service ?? "Not recorded" },
     { id: "followUp", accessorFn: getFollowUpStatus, header: "Follow-up", cell: ({ row }) => <FollowUpStatusBadge status={getFollowUpStatus(row.original)} /> },
     {
       id: "actions", enableSorting: false, cell: ({ row }) => (

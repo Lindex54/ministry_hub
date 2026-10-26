@@ -16,6 +16,10 @@ export function DataTable({
   showPageSize = true,
   enableSelection = true,
   initialPageSize = 5,
+  rowSelection: controlledRowSelection,
+  onRowSelectionChange: controlledOnRowSelectionChange,
+  getRowId,
+  globalFilterFn = "auto",
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -24,10 +28,12 @@ export function DataTable({
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter, rowSelection },
+    state: { sorting, globalFilter, rowSelection: controlledRowSelection ?? rowSelection },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
-    onRowSelectionChange: setRowSelection,
+    onRowSelectionChange: controlledOnRowSelectionChange ?? setRowSelection,
+    getRowId,
+    globalFilterFn,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),

@@ -11,6 +11,7 @@ import { PageHeader, ResponsiveGrid } from "@/components/shared/PageHeader";
 import { StatCard } from "@/components/shared/StatCard";
 import { useVisitors } from "../VisitorsProvider";
 import { useOutreach } from "@/features/outreach/OutreachProvider";
+import { useAttendance } from "@/features/attendance/AttendanceProvider";
 import { getFirstVisit, getFollowUpStatus, getLatestVisit, getVisitType, getVisitorName } from "../data/visitors.mock";
 import { VisitorsTable } from "./VisitorsTable";
 
@@ -21,7 +22,8 @@ function csvCell(value) {
 export function VisitorsOverview() {
   const { visitors: sourceVisitors } = useVisitors();
   const { getPersonTasks } = useOutreach();
-  const visitors = sourceVisitors.map((visitor) => ({ ...visitor, followUps: getPersonTasks(`visitor:${visitor.id}`).map((task) => ({ ...task, date: task.scheduledDate })) }));
+  const { getVisitorWithAttendance } = useAttendance();
+  const visitors = sourceVisitors.map((visitor) => ({ ...getVisitorWithAttendance(visitor), followUps: getPersonTasks(`visitor:${visitor.id}`).map((task) => ({ ...task, date: task.scheduledDate })) }));
   const stats = {
     total: visitors.length,
     newVisitors: visitors.filter((visitor) => getVisitType(visitor) === "New").length,
@@ -31,7 +33,7 @@ export function VisitorsOverview() {
 
   function exportVisitors() {
     const headings = ["Name", "Phone", "Email", "Visit type", "First visit", "Last visit", "Latest service", "Follow-up status"];
-    const rows = visitors.map((visitor) => [getVisitorName(visitor), visitor.phone, visitor.email, getVisitType(visitor), getFirstVisit(visitor).date, getLatestVisit(visitor).date, getLatestVisit(visitor).service, getFollowUpStatus(visitor)]);
+    const rows = visitors.map((visitor) => [getVisitorName(visitor), visitor.phone, visitor.email, getVisitType(visitor), getFirstVisit(visitor)?.date, getLatestVisit(visitor)?.date, getLatestVisit(visitor)?.service, getFollowUpStatus(visitor)]);
     const csv = [headings, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");

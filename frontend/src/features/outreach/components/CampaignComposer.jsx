@@ -36,7 +36,7 @@ export function CampaignComposer() {
   const { people, addCampaign, templates: allTemplates, addTemplate } = useOutreach();
   const [preview, setPreview] = useState(null);
   const [template, setTemplate] = useState("blank");
-  const form = useForm({ resolver: zodResolver(campaignSchema), defaultValues: { title: "", channel: "sms", subject: "", body: "", timing: "now", scheduledAt: "", association: "none", selection: { types: [], branches: [], ministries: [], services: [], events: [], individuals: [] } } });
+  const form = useForm({ resolver: zodResolver(campaignSchema), defaultValues: { title: "", channel: "email", subject: "", body: "", timing: "now", scheduledAt: "", association: "none", selection: { types: [], branches: [], ministries: [], services: [], events: [], individuals: [] } } });
   const values = form.watch();
   const recipients = resolveRecipients(people, values.selection, values.channel, events);
   const [showExcluded, setShowExcluded] = useState(false);
@@ -66,7 +66,7 @@ export function CampaignComposer() {
   return <form className="space-y-6" onSubmit={form.handleSubmit(openPreview)} noValidate>
     <Card><CardHeader className="border-b"><CardTitle>Compose campaign</CardTitle><CardDescription>Select a template or write a message for your chosen audience.</CardDescription></CardHeader><CardContent className="grid gap-5 md:grid-cols-2">
       <FormControl control={form.control} name="title" label="Campaign name" required />
-      <FormControl control={form.control} name="channel" label="Channel" options={[{ value: "sms", label: "SMS" }, { value: "email", label: "Email" }]} />
+      <FormControl control={form.control} name="channel" label="Select Channel" required options={[{ value: "email", label: "Email" }, { value: "sms", label: "SMS" }]} />
       <Field><FieldLabel>Message template</FieldLabel><Select value={template} onValueChange={applyTemplate}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="blank">Write your own message</SelectItem>{allTemplates.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></Field>
       <FormControl control={form.control} name="association" label="Associated service or event (optional)" options={[{ value: "none", label: "No association" }, ...serviceOptions.map((service) => ({ value: `service:${service}`, label: service })), ...events.map((event) => ({ value: `event:${event.id}`, label: `${event.name} · ${event.date}` }))]} />
       {values.channel === "email" ? <div className="md:col-span-2"><FormControl control={form.control} name="subject" label="Email subject" required /></div> : null}

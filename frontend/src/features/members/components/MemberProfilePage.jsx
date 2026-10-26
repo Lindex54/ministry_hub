@@ -13,6 +13,7 @@ import { useMembers } from "../MembersProvider";
 import { getMemberDisplayName } from "../data/members.mock";
 import { MemberAvatar } from "./MemberAvatar";
 import { MemberStatusBadge } from "./MemberStatusBadge";
+import { PersonAttendanceHistory } from "@/features/attendance/components/PersonAttendanceHistory";
 
 function formatDate(value) {
   if (!value) return "Not provided";
@@ -70,6 +71,7 @@ export function MemberProfilePage() {
         </CardContent>
       </Card>
 
+      <PersonAttendanceHistory personKey={`member:${member.id}`} />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader><CardTitle>Personal & contact</CardTitle><CardDescription>Identity and contact details.</CardDescription></CardHeader>

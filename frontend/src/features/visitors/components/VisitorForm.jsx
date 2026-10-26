@@ -40,15 +40,15 @@ export const emptyVisitorValues = {
   firstName: "", lastName: "", phone: "", email: "", gender: "", districtAddress: "", invitedBy: "", prayerRequest: "", permissionToContact: false, dateOfVisit: "", serviceAttended: "",
 };
 
-function TextField({ control, name, label, required, type = "text", placeholder, description }) {
-  return <Controller name={name} control={control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel htmlFor={`visitor-${name}`}>{label}{required ? <span className="text-destructive">*</span> : null}</FieldLabel><Input {...field} id={`visitor-${name}`} type={type} placeholder={placeholder} aria-invalid={fieldState.invalid} />{description ? <FieldDescription>{description}</FieldDescription> : null}{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />;
+function TextField({ control, name, label, required, type = "text", placeholder, description, disabled }) {
+  return <Controller name={name} control={control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel htmlFor={`visitor-${name}`}>{label}{required ? <span className="text-destructive">*</span> : null}</FieldLabel><Input {...field} id={`visitor-${name}`} type={type} placeholder={placeholder} disabled={disabled} aria-invalid={fieldState.invalid} />{description ? <FieldDescription>{description}</FieldDescription> : null}{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />;
 }
 
 function FormSection({ icon: Icon, title, description, children }) {
   return <Card><CardHeader className="border-b"><div className="flex items-start gap-3"><span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="size-5" /></span><div className="space-y-1"><CardTitle>{title}</CardTitle><CardDescription>{description}</CardDescription></div></div></CardHeader><CardContent className="grid gap-6 md:grid-cols-2">{children}</CardContent></Card>;
 }
 
-export function VisitorForm({ defaultValues, onSubmit, onCancel, registration = false, submitLabel = "Save visitor" }) {
+export function VisitorForm({ defaultValues, onSubmit, onCancel, registration = false, visitContext, submitLabel = "Save visitor" }) {
   const form = useForm({ resolver: zodResolver(registration ? registrationSchema : visitorDetailsSchema), defaultValues: { ...emptyVisitorValues, ...defaultValues } });
 
   return (
@@ -66,8 +66,8 @@ export function VisitorForm({ defaultValues, onSubmit, onCancel, registration = 
         <Controller name="districtAddress" control={form.control} render={({ field, fieldState }) => <Field className="md:col-span-2" data-invalid={fieldState.invalid}><FieldLabel htmlFor="visitor-address">District / address</FieldLabel><Textarea {...field} id="visitor-address" placeholder="District, town, village, or other helpful location details" aria-invalid={fieldState.invalid} />{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />
       </FormSection>
       {registration ? <FormSection icon={CalendarDays} title="Visit Information" description="Details of the service or gathering attended.">
-        <TextField control={form.control} name="dateOfVisit" label="Date of visit" required type="date" />
-        <Controller name="serviceAttended" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel htmlFor="visitor-service">Service attended <span className="text-destructive">*</span></FieldLabel><Select value={field.value || undefined} onValueChange={field.onChange}><SelectTrigger id="visitor-service" className="w-full" aria-invalid={fieldState.invalid}><SelectValue placeholder="Select a service" /></SelectTrigger><SelectContent>{serviceOptions.map((service) => <SelectItem key={service} value={service}>{service}</SelectItem>)}</SelectContent></Select>{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />
+        <TextField control={form.control} name="dateOfVisit" label="Date of visit" required type="date" disabled={Boolean(visitContext)} />
+        <Controller name="serviceAttended" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel htmlFor="visitor-service">Service attended <span className="text-destructive">*</span></FieldLabel><Select disabled={Boolean(visitContext)} value={field.value || undefined} onValueChange={field.onChange}><SelectTrigger id="visitor-service" className="w-full" aria-invalid={fieldState.invalid}><SelectValue placeholder="Select a service" /></SelectTrigger><SelectContent>{serviceOptions.map((service) => <SelectItem key={service} value={service}>{service}</SelectItem>)}</SelectContent></Select>{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />
       </FormSection> : null}
       <FormSection icon={MessageSquareText} title="Pastoral Care & Consent" description="Record optional care notes and the visitor's communication preference.">
         <Controller name="prayerRequest" control={form.control} render={({ field, fieldState }) => <Field className="md:col-span-2" data-invalid={fieldState.invalid}><FieldLabel htmlFor="visitor-prayer">Prayer request</FieldLabel><Textarea {...field} id="visitor-prayer" placeholder="Optional prayer request shared by the visitor" aria-invalid={fieldState.invalid} /><FieldDescription>This is sensitive pastoral information. Backend permissions must restrict access before production use.</FieldDescription>{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />

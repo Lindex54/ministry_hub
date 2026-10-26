@@ -18,6 +18,9 @@ const { chromium } = require(process.argv[2] || "playwright");
       await page.keyboard.press("Escape");
     };
     await page.goto("http://localhost:3100/communications");
+    await page.getByRole("combobox", { name: /^Select Channel/ }).getByText("Email", { exact: true }).waitFor();
+    assert.equal(await page.getByRole("combobox", { name: /^Select Channel/ }).innerText(), "Email");
+    await choose("Select Channel", "SMS");
     await page.getByLabel("Campaign name").fill("Sunday welcome test");
     await page.getByRole("textbox", { name: /^Message\s*\*?$/ }).fill("Hello {{name}}, welcome to our service.");
     await group("Choose record groups", "Member");
@@ -30,7 +33,7 @@ const { chromium } = require(process.argv[2] || "playwright");
 
     await page.getByRole("tab", { name: "Compose campaign", exact: true }).click();
     await page.getByLabel("Campaign name").fill("Scheduled invitation test");
-    await choose("Channel", "Email");
+    await choose("Select Channel", "Email");
     await page.getByLabel("Email subject").fill("Invitation");
     await page.getByRole("textbox", { name: /^Message\s*\*?$/ }).fill("Hello {{name}}, join our upcoming gathering.");
     await group("Choose record groups", "Visitor");
