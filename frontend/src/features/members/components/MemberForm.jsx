@@ -12,7 +12,8 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { churchBranches, ministryOptions, membershipStatuses } from "../data/members.mock";
+import { membershipStatuses } from "../data/members.mock";
+import { useMinistries } from "@/features/ministries/MinistriesProvider";
 
 function isUgandanPhone(value) {
   if (!value) return true;
@@ -97,6 +98,7 @@ function FormSection({ icon: Icon, title, description, children }) {
 
 export function MemberForm({ defaultValues, onSubmit, submitLabel = "Save member", onCancel }) {
   const fileInputRef = useRef(null);
+  const { branchNames, ministryNames } = useMinistries();
   const form = useForm({
     resolver: zodResolver(memberSchema),
     defaultValues: { ...emptyMemberValues, ...defaultValues },
@@ -175,7 +177,7 @@ export function MemberForm({ defaultValues, onSubmit, submitLabel = "Save member
             <FieldLabel htmlFor="member-branch">Church branch <span className="text-destructive">*</span></FieldLabel>
             <Select value={field.value || undefined} onValueChange={field.onChange}>
               <SelectTrigger id="member-branch" className="w-full" aria-invalid={fieldState.invalid}><SelectValue placeholder="Select church branch" /></SelectTrigger>
-              <SelectContent>{churchBranches.map((branch) => <SelectItem key={branch} value={branch}>{branch}</SelectItem>)}</SelectContent>
+              <SelectContent>{branchNames.map((branch) => <SelectItem key={branch} value={branch}>{branch}</SelectItem>)}</SelectContent>
             </Select>
             {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
           </Field>
@@ -195,7 +197,7 @@ export function MemberForm({ defaultValues, onSubmit, submitLabel = "Save member
           <Field className="md:col-span-2" data-invalid={fieldState.invalid}>
             <FieldLabel>Ministry affiliations <span className="text-destructive">*</span></FieldLabel>
             <div className="grid gap-3 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2 lg:grid-cols-3">
-              {ministryOptions.map((ministry) => (
+              {ministryNames.map((ministry) => (
                 <label key={ministry} className="flex cursor-pointer items-center gap-2 text-sm">
                   <Checkbox
                     checked={field.value.includes(ministry)}

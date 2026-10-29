@@ -15,8 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { DataTable } from "@/components/tables/DataTable";
-import { churchBranches, ministryOptions } from "@/features/members/data/members.mock";
 import { serviceOptions } from "@/features/visitors/data/visitors.mock";
+import { useMinistries } from "@/features/ministries/MinistriesProvider";
 import { useOutreach } from "../OutreachProvider";
 import { events } from "../data/outreach.mock";
 import { kampalaDateTime, personalizeMessage, resolveRecipients } from "../outreach-utils.mjs";
@@ -34,6 +34,7 @@ function GroupSelector({ label, options, values, onChange }) {
 
 export function CampaignComposer() {
   const { people, addCampaign, templates: allTemplates, addTemplate } = useOutreach();
+  const { branchNames, ministryNames } = useMinistries();
   const [preview, setPreview] = useState(null);
   const [template, setTemplate] = useState("blank");
   const form = useForm({ resolver: zodResolver(campaignSchema), defaultValues: { title: "", channel: "email", subject: "", body: "", timing: "now", scheduledAt: "", association: "none", selection: { types: [], branches: [], ministries: [], services: [], events: [], individuals: [] } } });
@@ -74,7 +75,7 @@ export function CampaignComposer() {
     </CardContent></Card>
     <Card><CardHeader className="border-b"><CardTitle>Select recipients</CardTitle><CardDescription>Selections are combined. Overlapping groups and duplicate contact destinations are counted once. Service groups use recorded mock attendance; event groups use mock invitation lists.</CardDescription></CardHeader><CardContent className="space-y-5">
       <Controller name="selection" control={form.control} render={({ field }) => <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[{ key: "types", label: "Record groups", options: ["Member", "Visitor"] }, { key: "branches", label: "Church branches", options: churchBranches }, { key: "ministries", label: "Ministries", options: ministryOptions.filter((ministry) => ministry !== "None") }, { key: "services", label: "Services", options: serviceOptions }, { key: "events", label: "Upcoming events", options: events.map((event) => ({ value: event.id, label: `${event.name} · ${event.date}` })) }].map((group) => <GroupSelector key={group.key} label={group.label} options={group.options} values={field.value[group.key]} onChange={(next) => field.onChange({ ...field.value, [group.key]: next })} />)}
+        {[{ key: "types", label: "Record groups", options: ["Member", "Visitor"] }, { key: "branches", label: "Church branches", options: branchNames }, { key: "ministries", label: "Ministries", options: ministryNames.filter((ministry) => ministry !== "None") }, { key: "services", label: "Services", options: serviceOptions }, { key: "events", label: "Upcoming events", options: events.map((event) => ({ value: event.id, label: `${event.name} · ${event.date}` })) }].map((group) => <GroupSelector key={group.key} label={group.label} options={group.options} values={field.value[group.key]} onChange={(next) => field.onChange({ ...field.value, [group.key]: next })} />)}
       </div>} />
       <div className="rounded-lg border bg-muted/20 p-4 text-sm"><p className="font-medium">Eligibility respects recorded consent, channel preferences, and valid contact details.</p><p className="mt-1 text-muted-foreground">Member preferences are explicit fictional settings. New records without consent are excluded. Visitor contact permission applies alongside channel preferences. Unknown branch or ministry details are never inferred.</p></div>
       <details><summary className="cursor-pointer text-sm font-semibold text-primary">Choose specific individuals ({values.selection.individuals.length} selected)</summary><div className="mt-4"><DataTable columns={individualColumns} data={people.filter((person) => person.type !== "Evangelism contact")} enableSelection={false} searchPlaceholder="Find a member or visitor..." /></div></details>

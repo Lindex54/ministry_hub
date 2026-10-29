@@ -11,13 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAttendance } from "../AttendanceProvider";
-import { branches } from "../data/attendance.mock";
+import { useMinistries } from "@/features/ministries/MinistriesProvider";
 import { AttendanceRegister } from "./AttendanceRegister";
 import { AddAttendeeDialog, CreateOccurrenceDialog } from "./AttendanceDialogs";
 import { AttendanceAnalytics } from "./AttendanceAnalytics";
 
 export function AttendancePage() {
-  const { scope, setScope, branchServices, selectedOccurrence, changeBranch, occurrences, selectOccurrence, totals } = useAttendance();
+  const { scope, setScope, getBranchServices, selectedOccurrence, changeBranch, occurrences, selectOccurrence, totals } = useAttendance();
+  const { allBranchNames } = useMinistries();
   const counts = totals(selectedOccurrence);
   const history = occurrences.filter((item) => item.branch === scope.branch && item.date <= scope.date).sort((a, b) => b.date.localeCompare(a.date)).map((item) => ({ ...item, ...totals(item) }));
   function changeService(service) {
@@ -33,8 +34,8 @@ export function AttendancePage() {
     <PageHeader title="Attendance" description="Record attendance for each branch, service, and date in its own independent register." actions={<><CreateOccurrenceDialog /><AddAttendeeDialog /></>} />
     <Alert className="border-primary/20 bg-primary/5"><ClipboardCheck /><AlertTitle>Demonstration attendance data</AlertTitle><AlertDescription>Registers share existing member and visitor records. Updates are temporary and reset when the browser is refreshed. Administrator and usher permissions will be implemented later.</AlertDescription></Alert>
     <Card><CardContent className="grid gap-4 sm:grid-cols-3">
-      <div className="space-y-2"><Label htmlFor="attendance-branch">Church branch</Label><Select value={scope.branch} onValueChange={changeBranch}><SelectTrigger id="attendance-branch" className="w-full"><SelectValue /></SelectTrigger><SelectContent>{branches.map((branch) => <SelectItem key={branch} value={branch}>{branch}</SelectItem>)}</SelectContent></Select></div>
-      <div className="space-y-2"><Label htmlFor="attendance-service">Service</Label><Select value={scope.service} onValueChange={changeService}><SelectTrigger id="attendance-service" className="w-full"><SelectValue /></SelectTrigger><SelectContent>{branchServices[scope.branch].map((service) => <SelectItem key={service} value={service}>{service}</SelectItem>)}</SelectContent></Select></div>
+      <div className="space-y-2"><Label htmlFor="attendance-branch">Church branch</Label><Select value={scope.branch} onValueChange={changeBranch}><SelectTrigger id="attendance-branch" className="w-full"><SelectValue /></SelectTrigger><SelectContent>{allBranchNames.map((branch) => <SelectItem key={branch} value={branch}>{branch}</SelectItem>)}</SelectContent></Select></div>
+      <div className="space-y-2"><Label htmlFor="attendance-service">Service</Label><Select value={scope.service} onValueChange={changeService}><SelectTrigger id="attendance-service" className="w-full"><SelectValue /></SelectTrigger><SelectContent>{getBranchServices(scope.branch).map((service) => <SelectItem key={service} value={service}>{service}</SelectItem>)}</SelectContent></Select></div>
       <div className="space-y-2"><Label htmlFor="attendance-date">Service date</Label><Input id="attendance-date" type="date" value={scope.date} onChange={(event) => { if (event.target.value) setScope({ ...scope, date: event.target.value }); }} /></div>
     </CardContent></Card>
     <div data-testid="attendance-statistics"><ResponsiveGrid><StatCard title="Latest Service Attendance" value={selectedOccurrence ? counts.total : "—"} detail={`Selected register · ${scope.date}`} icon={ClipboardCheck} /><StatCard title="Members Present" value={selectedOccurrence ? counts.members : "—"} detail="Confirmed present members" icon={UserCheck} /><StatCard title="Visitors Present" value={selectedOccurrence ? counts.visitors : "—"} detail="Confirmed present visitors" icon={UserRoundPlus} /><StatCard title="Members Absent" value={selectedOccurrence ? counts.absent : "—"} detail="Explicitly absent, expected members only" icon={UserX} /></ResponsiveGrid></div>

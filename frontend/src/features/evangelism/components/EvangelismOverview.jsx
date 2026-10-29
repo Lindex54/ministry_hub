@@ -14,8 +14,9 @@ import { FadeIn } from "@/components/shared/Motion";
 import { PageHeader, ResponsiveGrid } from "@/components/shared/PageHeader";
 import { StatCard } from "@/components/shared/StatCard";
 import { useOutreach } from "@/features/outreach/OutreachProvider";
+import { useMinistries } from "@/features/ministries/MinistriesProvider";
 import { useEvangelism } from "../EvangelismProvider";
-import { branches, getLatestEncounter } from "../data/evangelism.mock";
+import { getLatestEncounter } from "../data/evangelism.mock";
 import { countPositiveResponses, countSoulsAccepted, peopleEvangelized } from "../evangelism-utils.mjs";
 import { ActivitiesSection } from "./ActivitiesSection";
 import { EvangelismAnalytics } from "./EvangelismAnalytics";
@@ -26,6 +27,7 @@ const defaultRange = { from: new Date(2026, 8, 1), to: new Date(2026, 10, 10) };
 export function EvangelismOverview() {
   const { records, activities } = useEvangelism();
   const { getPersonTasks } = useOutreach();
+  const { allBranchNames } = useMinistries();
   const [branch, setBranch] = useState("all");
   const [dateRange, setDateRange] = useState(defaultRange);
 
@@ -52,7 +54,7 @@ export function EvangelismOverview() {
       <PageHeader title="Evangelism" description="Record outreach activities, track souls reached, and coordinate follow-up." actions={<Button asChild><Link href="/evangelism/new"><UserPlus />Record soul</Link></Button>} />
       <Alert className="border-primary/20 bg-primary/5"><HeartHandshake /><AlertTitle>Demonstration data</AlertTitle><AlertDescription>Evangelism records, activities, and responses are kept only in memory and reset when the browser is refreshed. No messages are sent automatically.</AlertDescription></Alert>
       <Card><CardContent className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2"><Label htmlFor="evangelism-branch">Church branch</Label><Select value={branch} onValueChange={setBranch}><SelectTrigger id="evangelism-branch" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All branches</SelectItem>{branches.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></div>
+        <div className="space-y-2"><Label htmlFor="evangelism-branch">Church branch</Label><Select value={branch} onValueChange={setBranch}><SelectTrigger id="evangelism-branch" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All branches</SelectItem>{allBranchNames.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></div>
         <div className="space-y-2"><Label>Date range</Label><DateRangePicker value={dateRange} onChange={setDateRange} className="w-full" /></div>
       </CardContent></Card>
       <FadeIn><ResponsiveGrid>

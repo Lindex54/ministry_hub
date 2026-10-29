@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useMembers } from "@/features/members/MembersProvider";
 import { useVisitors } from "@/features/visitors/VisitorsProvider";
 import { attendanceTotals, occurrenceKey, recordAttendance, setExpectedPerson } from "./attendance-utils.mjs";
-import { branchServices, createMockOccurrences, visitorBranches } from "./data/attendance.mock";
+import { createMockOccurrences, getBranchServices, visitorBranches } from "./data/attendance.mock";
 
 const AttendanceContext = createContext(null);
 
@@ -33,7 +33,7 @@ export function AttendanceProvider({ children }) {
   for (const visitor of visitors) {
     for (const visit of visitor.visitHistory) {
       const branch = visit.branch ?? visitor.branch ?? visitorBranches[visitor.id];
-      if (!branch || !branchServices[branch]?.includes(visit.service)) continue;
+      if (!branch || !getBranchServices(branch).includes(visit.service)) continue;
       const id = occurrenceKey(branch, visit.service, visit.date);
       let occurrence = occurrences.find((item) => item.id === id);
       if (!occurrence) { occurrence = { id, branch, service: visit.service, date: visit.date, expected: [], records: {}, roster: [] }; occurrences.push(occurrence); }
@@ -74,10 +74,11 @@ export function AttendanceProvider({ children }) {
   }
 
   const value = {
-    people, occurrences, scope, setScope, selectedOccurrence, branchServices, getPersonAttendance, getVisitorWithAttendance,
+    people, occurrences, scope, setScope, selectedOccurrence, getBranchServices, getPersonAttendance, getVisitorWithAttendance,
     selectOccurrence: (occurrence) => setScope({ branch: occurrence.branch, service: occurrence.service, date: occurrence.date }),
     changeBranch: (branch) => {
-      const service = branchServices[branch].includes(scope.service) ? scope.service : branchServices[branch][0];
+      const services = getBranchServices(branch);
+      const service = services.includes(scope.service) ? scope.service : services[0];
       const matchingDate = occurrences.some((item) => item.branch === branch && item.service === service && item.date === scope.date);
       const date = matchingDate ? scope.date : occurrences.filter((item) => item.branch === branch && item.service === service).sort((a, b) => b.date.localeCompare(a.date))[0]?.date ?? scope.date;
       setScope({ branch, service, date });

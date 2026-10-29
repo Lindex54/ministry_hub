@@ -1,23 +1,3 @@
-export const churchBranches = [
-  "Central Campus",
-  "Kawempe Branch",
-  "Kira Branch",
-  "Mukono Branch",
-];
-
-export const ministryOptions = [
-  "None",
-  "Children's Ministry",
-  "Choir",
-  "Hospitality",
-  "Media",
-  "Men's Ministry",
-  "Outreach",
-  "Prayer",
-  "Women's Ministry",
-  "Youth Ministry",
-];
-
 export const membershipStatuses = ["Active", "Inactive", "Transferred"];
 
 export const mockMembers = [

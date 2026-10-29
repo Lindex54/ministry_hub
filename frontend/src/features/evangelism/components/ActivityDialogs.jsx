@@ -15,7 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useEvangelism } from "../EvangelismProvider";
-import { branches, evangelismTeam, outreachActivityTypes } from "../data/evangelism.mock";
+import { evangelismTeam, outreachActivityTypes } from "../data/evangelism.mock";
+import { useMinistries } from "@/features/ministries/MinistriesProvider";
 
 const activitySchema = z.object({
   name: z.string().trim().min(1, "Activity name is required."),
@@ -35,6 +36,7 @@ function defaults(branch) {
 export function NewActivityDialog({ branch = "all" }) {
   const [open, setOpen] = useState(false);
   const { addActivity } = useEvangelism();
+  const { branchNames } = useMinistries();
   const form = useForm({ resolver: zodResolver(activitySchema), defaultValues: defaults(branch) });
 
   function submit(values) {
@@ -57,7 +59,7 @@ export function NewActivityDialog({ branch = "all" }) {
           </div>
           <Controller name="location" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel htmlFor="activity-location">Location <span className="text-destructive">*</span></FieldLabel><Input {...field} id="activity-location" placeholder="e.g. Kawempe Trading Centre" aria-invalid={fieldState.invalid} />{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <Controller name="branch" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel>Organizing branch <span className="text-destructive">*</span></FieldLabel><Select value={field.value || undefined} onValueChange={field.onChange}><SelectTrigger className="w-full" aria-invalid={fieldState.invalid}><SelectValue placeholder="Select branch" /></SelectTrigger><SelectContent>{branches.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />
+            <Controller name="branch" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel>Organizing branch <span className="text-destructive">*</span></FieldLabel><Select value={field.value || undefined} onValueChange={field.onChange}><SelectTrigger className="w-full" aria-invalid={fieldState.invalid}><SelectValue placeholder="Select branch" /></SelectTrigger><SelectContent>{branchNames.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />
             <Controller name="headcount" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel htmlFor="activity-headcount">People reached (headcount)</FieldLabel><Input {...field} id="activity-headcount" type="number" min="0" aria-invalid={fieldState.invalid} /><FieldDescription>Only people whose personal information was not collected.</FieldDescription>{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />
           </div>
           <Controller name="team" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel>Evangelism team <span className="text-destructive">*</span></FieldLabel><div className="grid gap-3 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2">{evangelismTeam.map((worker) => <label key={worker.id} className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={field.value.includes(worker.id)} onCheckedChange={(checked) => field.onChange(checked ? [...field.value, worker.id] : field.value.filter((item) => item !== worker.id))} />{worker.name} · {worker.role}</label>)}</div>{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />

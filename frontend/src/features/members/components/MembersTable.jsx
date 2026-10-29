@@ -15,13 +15,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { churchBranches, getMemberDisplayName } from "../data/members.mock";
+import { getMemberDisplayName } from "../data/members.mock";
 import { useMembers } from "../MembersProvider";
+import { useMinistries } from "@/features/ministries/MinistriesProvider";
 import { MemberAvatar } from "./MemberAvatar";
 import { MemberStatusBadge } from "./MemberStatusBadge";
 
 export function MembersTable() {
   const { members, updateMember } = useMembers();
+  const { allBranchNames } = useMinistries();
   const [status, setStatus] = useState("all");
   const [branch, setBranch] = useState("all");
 
@@ -112,7 +114,7 @@ export function MembersTable() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All branches</SelectItem>
-            {churchBranches.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+            {allBranchNames.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
           </SelectContent>
         </Select>
         {(status !== "all" || branch !== "all") ? (

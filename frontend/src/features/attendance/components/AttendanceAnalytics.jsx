@@ -6,10 +6,11 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useAttendance } from "../AttendanceProvider";
-import { branches } from "../data/attendance.mock";
+import { useMinistries } from "@/features/ministries/MinistriesProvider";
 
 export function AttendanceAnalytics() {
   const { occurrences, scope, totals } = useAttendance();
+  const { allBranchNames: branches } = useMinistries();
   const [comparisonBranches, setComparisonBranches] = useState(branches);
   const trend = occurrences.filter((item) => item.branch === scope.branch && item.service === scope.service && item.date <= scope.date).sort((a, b) => a.date.localeCompare(b.date)).slice(-8);
   const comparison = comparisonBranches.map((branch) => ({ branch, occurrence: occurrences.find((item) => item.branch === branch && item.service === scope.service && item.date === scope.date) }));

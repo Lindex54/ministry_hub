@@ -1,11 +1,16 @@
-import { churchBranches } from "@/features/members/data/members.mock";
 import { mockVisitors, serviceOptions } from "@/features/visitors/data/visitors.mock";
 import { occurrenceKey } from "../attendance-utils.mjs";
 
-export const branches = churchBranches;
+// Seed branches for generating historical mock registers. The live branch directory
+// is managed in Ministries > Church Branches; new branches start with no registers yet.
+const branches = ["Central Campus", "Kawempe Branch", "Kira Branch", "Mukono Branch"];
 export const branchServices = Object.fromEntries(branches.map((branch) => [branch,
   serviceOptions.filter((service) => service !== "Youth Worship Night" || ["Central Campus", "Kira Branch"].includes(branch)),
 ]));
+
+export function getBranchServices(branch) {
+  return branchServices[branch] ?? serviceOptions;
+}
 
 export const visitorBranches = {
   "visitor-001": "Central Campus", "visitor-002": "Kawempe Branch", "visitor-003": "Kira Branch",

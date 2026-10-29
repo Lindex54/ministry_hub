@@ -1,7 +1,5 @@
-import { churchBranches } from "@/features/members/data/members.mock";
 import { workers } from "@/features/outreach/data/outreach.mock";
 
-export const branches = churchBranches;
 export const evangelismTeam = workers;
 
 export const outreachActivityTypes = [

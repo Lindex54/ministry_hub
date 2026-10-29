@@ -11,7 +11,8 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { branches, evangelismTeam, responseOptions } from "../data/evangelism.mock";
+import { evangelismTeam, responseOptions } from "../data/evangelism.mock";
+import { useMinistries } from "@/features/ministries/MinistriesProvider";
 
 function isUgandanPhone(value) {
   if (!value) return true;
@@ -71,6 +72,7 @@ function ConsentToggle({ control, name, label, description }) {
 }
 
 export function EvangelismForm({ defaultValues, activities, onSubmit, onCancel, submitLabel = "Save record", editMode = false }) {
+  const { branchNames } = useMinistries();
   const form = useForm({ resolver: zodResolver(editMode ? editSchema : registrationSchema), defaultValues: { ...emptyEvangelismValues, ...defaultValues } });
 
   return (
@@ -82,7 +84,7 @@ export function EvangelismForm({ defaultValues, activities, onSubmit, onCancel, 
         <TextField control={form.control} name="phone" label="Phone number" type="tel" placeholder="0772 123 456" description="Used to recognize this person on a future encounter." />
         <SelectField control={form.control} name="gender" label="Gender" placeholder="Select gender" options={["Female", "Male", "Prefer not to say"]} />
         <Controller name="districtVillage" control={form.control} render={({ field, fieldState }) => <Field className="md:col-span-2" data-invalid={fieldState.invalid}><FieldLabel htmlFor="evangelism-districtVillage">District / village</FieldLabel><Input {...field} id="evangelism-districtVillage" placeholder="District, town, or village" aria-invalid={fieldState.invalid} />{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />
-        <SelectField control={form.control} name="branch" label="Church branch" placeholder="Select branch" options={branches} />
+        <SelectField control={form.control} name="branch" label="Church branch" placeholder="Select branch" options={branchNames} />
       </FormSection>
       {!editMode ? <FormSection icon={CalendarHeart} title="Outreach Encounter" description="Where, when, and how this encounter happened.">
         <TextField control={form.control} name="evangelismDate" label="Evangelism date" required type="date" />
