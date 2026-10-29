@@ -34,7 +34,24 @@ function defaults(ministry) {
 
 function MinistryFormFields({ form }) {
   const { members } = useMembers();
-  const { branches } = useMinistries();
+  const { branches, addBranch } = useMinistries();
+  const [newBranchName, setNewBranchName] = useState("");
+
+  function addNewBranch(field) {
+    const name = newBranchName.trim();
+    if (!name) return;
+    const existing = branches.find((branch) => branch.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      if (!field.value.includes(existing.id)) field.onChange([...field.value, existing.id]);
+      setNewBranchName("");
+      return;
+    }
+    const branch = addBranch({ name, location: "", district: "", address: "", phone: "", email: "", dateEstablished: format(new Date(), "yyyy-MM-dd"), leaderKey: "", assistantLeaderKey: "", description: "", status: "Active" });
+    field.onChange([...field.value, branch.id]);
+    setNewBranchName("");
+    toast.success(`${name} was added as a church branch. Complete its full details from the Church Branches tab.`);
+  }
+
   return (
     <>
       <Controller name="name" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel htmlFor="ministry-name">Ministry name <span className="text-destructive">*</span></FieldLabel><Input {...field} id="ministry-name" placeholder="e.g. Worship" aria-invalid={fieldState.invalid} />{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />
@@ -47,7 +64,16 @@ function MinistryFormFields({ form }) {
         <Controller name="dateEstablished" control={form.control} render={({ field }) => <Field><FieldLabel htmlFor="ministry-date">Date established</FieldLabel><Input {...field} id="ministry-date" type="date" /></Field>} />
         <Controller name="status" control={form.control} render={({ field }) => <Field><FieldLabel>Status</FieldLabel><Select value={field.value} onValueChange={field.onChange}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent>{ministryStatuses.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select></Field>} />
       </div>
-      <Controller name="branchIds" control={form.control} render={({ field }) => <Field><FieldLabel>Operating church branches</FieldLabel><div className="grid gap-3 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2">{branches.map((branch) => <label key={branch.id} className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={field.value.includes(branch.id)} onCheckedChange={(checked) => field.onChange(checked ? [...field.value, branch.id] : field.value.filter((id) => id !== branch.id))} />{branch.name}</label>)}</div></Field>} />
+      <Controller name="branchIds" control={form.control} render={({ field }) => <Field><FieldLabel>Operating church branches</FieldLabel>
+        <div className="space-y-3 rounded-xl border bg-muted/20 p-4">
+          <div className="grid gap-3 sm:grid-cols-2">{branches.map((branch) => <label key={branch.id} className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={field.value.includes(branch.id)} onCheckedChange={(checked) => field.onChange(checked ? [...field.value, branch.id] : field.value.filter((id) => id !== branch.id))} />{branch.name}</label>)}</div>
+          <div className="flex gap-2 border-t pt-3">
+            <Input value={newBranchName} onChange={(event) => setNewBranchName(event.target.value)} placeholder="Add a new branch by name" onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addNewBranch(field); } }} />
+            <Button type="button" variant="outline" onClick={() => addNewBranch(field)}><Plus />Add</Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Not finding a branch? Add it here and fill in its full details later from the Church Branches tab.</p>
+        </div>
+      </Field>} />
     </>
   );
 }

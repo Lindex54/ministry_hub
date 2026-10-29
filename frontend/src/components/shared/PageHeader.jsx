@@ -1,3 +1,4 @@
+import { Children, cloneElement, isValidElement } from "react";
 import { cn } from "@/lib/utils";
 
 export function PageHeader({ title, description, actions, className }) {
@@ -38,9 +39,10 @@ export function PageSection({ title, description, children, className }) {
 }
 
 export function ResponsiveGrid({ children, className }) {
+  let index = 0;
   return (
-    <div className={cn("grid gap-4 sm:grid-cols-2 xl:grid-cols-4", className)}>
-      {children}
+    <div className={cn("grid gap-x-4 gap-y-10 sm:grid-cols-2 xl:grid-cols-4", className)}>
+      {Children.map(children, (child) => isValidElement(child) ? cloneElement(child, { accentIndex: index++ }) : child)}
     </div>
   );
 }

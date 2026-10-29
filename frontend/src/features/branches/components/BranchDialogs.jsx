@@ -46,8 +46,25 @@ function defaults(branch, ministriesForBranch) {
 
 function BranchFormFields({ form }) {
   const { members } = useMembers();
-  const { ministries } = useMinistries();
+  const { ministries, addMinistry } = useMinistries();
   const options = leaderOptions(members);
+  const [newMinistryName, setNewMinistryName] = useState("");
+
+  function addNewMinistry(field) {
+    const name = newMinistryName.trim();
+    if (!name) return;
+    const existing = ministries.find((ministry) => ministry.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      if (!field.value.includes(existing.id)) field.onChange([...field.value, existing.id]);
+      setNewMinistryName("");
+      return;
+    }
+    const ministry = addMinistry({ name, description: "", leaderId: "", assistantLeaderId: "", dateEstablished: format(new Date(), "yyyy-MM-dd"), status: "Active", branchIds: [] });
+    field.onChange([...field.value, ministry.id]);
+    setNewMinistryName("");
+    toast.success(`${name} was added as a ministry. Assign its leader from the Ministries tab.`);
+  }
+
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -69,7 +86,16 @@ function BranchFormFields({ form }) {
         <Controller name="status" control={form.control} render={({ field }) => <Field><FieldLabel>Status</FieldLabel><Select value={field.value} onValueChange={field.onChange}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent>{branchStatuses.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select></Field>} />
       </div>
       <Controller name="description" control={form.control} render={({ field }) => <Field><FieldLabel htmlFor="branch-description">Description</FieldLabel><Textarea {...field} id="branch-description" placeholder="Optional notes about this branch" /></Field>} />
-      <Controller name="ministryIds" control={form.control} render={({ field }) => <Field><FieldLabel>Ministries operating at this branch</FieldLabel><div className="grid gap-3 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2">{ministries.map((ministry) => <label key={ministry.id} className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={field.value.includes(ministry.id)} onCheckedChange={(checked) => field.onChange(checked ? [...field.value, ministry.id] : field.value.filter((id) => id !== ministry.id))} />{ministry.name}</label>)}</div></Field>} />
+      <Controller name="ministryIds" control={form.control} render={({ field }) => <Field><FieldLabel>Ministries operating at this branch</FieldLabel>
+        <div className="space-y-3 rounded-xl border bg-muted/20 p-4">
+          <div className="grid gap-3 sm:grid-cols-2">{ministries.map((ministry) => <label key={ministry.id} className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={field.value.includes(ministry.id)} onCheckedChange={(checked) => field.onChange(checked ? [...field.value, ministry.id] : field.value.filter((id) => id !== ministry.id))} />{ministry.name}</label>)}</div>
+          <div className="flex gap-2 border-t pt-3">
+            <Input value={newMinistryName} onChange={(event) => setNewMinistryName(event.target.value)} placeholder="Add a new ministry by name" onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addNewMinistry(field); } }} />
+            <Button type="button" variant="outline" onClick={() => addNewMinistry(field)}><Plus />Add</Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Not finding a ministry? Add it here and assign its leader later from the Ministries tab.</p>
+        </div>
+      </Field>} />
     </>
   );
 }
