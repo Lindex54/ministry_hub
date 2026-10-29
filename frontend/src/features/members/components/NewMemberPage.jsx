@@ -11,14 +11,17 @@ import { useVisitors } from "@/features/visitors/VisitorsProvider";
 import { emptyMemberValues, MemberForm } from "./MemberForm";
 import { useAttendance } from "@/features/attendance/AttendanceProvider";
 import { normalizePhone } from "@/features/outreach/outreach-utils.mjs";
+import { useEvangelism } from "@/features/evangelism/EvangelismProvider";
 
 export function NewMemberPage() {
   const router = useRouter();
   const { members, addMember, getNextMembershipNumber } = useMembers();
   const { registrationOccurrence, completeRegistration, cancelRegistration } = useAttendance();
   const { visitors, memberConversionVisitorId, getVisitor, finishMemberConversion, cancelMemberConversion } = useVisitors();
+  const { memberConversionRecordId, getRecord, finishMemberConversion: finishEvangelismMemberConversion, cancelMemberConversion: cancelEvangelismMemberConversion } = useEvangelism();
   const membershipNumber = getNextMembershipNumber();
   const visitor = memberConversionVisitorId ? getVisitor(memberConversionVisitorId) : null;
+  const evangelismRecord = !visitor && memberConversionRecordId ? getRecord(memberConversionRecordId) : null;
 
   const defaultValues = visitor ? {
     ...emptyMemberValues,
@@ -31,6 +34,17 @@ export function NewMemberPage() {
     email: visitor.email,
     district: visitor.districtAddress.split(",").at(-1)?.trim() ?? "",
     address: visitor.districtAddress,
+    dateJoined: format(new Date(), "yyyy-MM-dd"),
+  } : evangelismRecord ? {
+    ...emptyMemberValues,
+    membershipNumber,
+    firstName: evangelismRecord.firstName,
+    lastName: evangelismRecord.lastName,
+    gender: evangelismRecord.gender,
+    primaryPhone: evangelismRecord.phone,
+    district: evangelismRecord.districtVillage.split(",").at(-1)?.trim() ?? "",
+    address: evangelismRecord.districtVillage,
+    branch: evangelismRecord.branch ?? "",
     dateJoined: format(new Date(), "yyyy-MM-dd"),
   } : { ...emptyMemberValues, membershipNumber, branch: registrationOccurrence?.branch ?? "", dateJoined: registrationOccurrence?.date ?? "" };
 
@@ -46,6 +60,11 @@ export function NewMemberPage() {
     const existingVisitor = registrationOccurrence ? visitors.find((item) => !item.convertedMemberId && normalizePhone(item.phone) === normalizePhone(values.primaryPhone)) : visitor;
     const member = addMember(existingVisitor ? { ...values, sourceVisitorId: existingVisitor.id } : values);
     if (existingVisitor) finishMemberConversion(existingVisitor.id, member.id);
+    if (evangelismRecord) {
+      finishEvangelismMemberConversion(evangelismRecord.id, member.id);
+      toast.success(`${values.firstName} ${values.lastName} was registered as a member from their evangelism record.`);
+      router.push(`/members/${member.id}`); return;
+    }
     if (registrationOccurrence) {
       completeRegistration(existingVisitor ? `visitor:${existingVisitor.id}` : `member:${member.id}`, "Member");
       toast.success("Member registered. You can now mark them present in the selected register.");
@@ -57,15 +76,16 @@ export function NewMemberPage() {
 
   function cancel() {
     cancelMemberConversion(); cancelRegistration();
+    if (evangelismRecord) { cancelEvangelismMemberConversion(); router.push(`/evangelism/${evangelismRecord.id}`); return; }
     router.push(registrationOccurrence ? "/attendance" : visitor ? `/visitors/${visitor.id}` : "/members");
   }
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
       <PageHeader
-        title={visitor ? `Register ${visitor.firstName} ${visitor.lastName} as member` : "Register member"}
-        description={registrationOccurrence ? `Adding an attendee for ${registrationOccurrence.branch} · ${registrationOccurrence.service} · ${registrationOccurrence.date}.` : visitor ? "Available visitor information has been transferred into this form. Complete the required membership details." : "Create a new church member record with the required identity and church details."}
-        actions={<Button variant="outline" onClick={cancel}><ArrowLeft />{registrationOccurrence ? "Attendance" : visitor ? "Visitor profile" : "Members"}</Button>}
+        title={visitor ? `Register ${visitor.firstName} ${visitor.lastName} as member` : evangelismRecord ? `Register ${evangelismRecord.firstName} as member` : "Register member"}
+        description={registrationOccurrence ? `Adding an attendee for ${registrationOccurrence.branch} · ${registrationOccurrence.service} · ${registrationOccurrence.date}.` : visitor ? "Available visitor information has been transferred into this form. Complete the required membership details." : evangelismRecord ? "Available evangelism information has been transferred into this form. Complete the required membership details." : "Create a new church member record with the required identity and church details."}
+        actions={<Button variant="outline" onClick={cancel}><ArrowLeft />{registrationOccurrence ? "Attendance" : visitor ? "Visitor profile" : evangelismRecord ? "Evangelism profile" : "Members"}</Button>}
       />
       <MemberForm
         defaultValues={defaultValues}

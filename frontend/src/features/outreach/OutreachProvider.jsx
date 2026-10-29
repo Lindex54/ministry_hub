@@ -6,6 +6,8 @@ import { useVisitors } from "@/features/visitors/VisitorsProvider";
 import { mockVisitors } from "@/features/visitors/data/visitors.mock";
 import { evangelismContacts, memberPreferences, templates, workers } from "./data/outreach.mock";
 import { useAttendance } from "@/features/attendance/AttendanceProvider";
+import { useEvangelism } from "@/features/evangelism/EvangelismProvider";
+import { getRecordName } from "@/features/evangelism/data/evangelism.mock";
 
 const OutreachContext = createContext(null);
 
@@ -27,6 +29,7 @@ export function OutreachProvider({ children }) {
   const { members } = useMembers();
   const { visitors: sourceVisitors } = useVisitors();
   const { getVisitorWithAttendance, getPersonAttendance } = useAttendance();
+  const { records: evangelismRecords } = useEvangelism();
   const visitors = sourceVisitors.map(getVisitorWithAttendance);
   const [tasks, setTasks] = useState(initialTasks);
   const [campaigns, setCampaigns] = useState([]);
@@ -39,7 +42,8 @@ export function OutreachProvider({ children }) {
     }),
     ...visitors.filter((visitor) => !visitor.convertedMemberId).map((visitor) => ({ key: `visitor:${visitor.id}`, id: visitor.id, type: "Visitor", name: `${visitor.firstName} ${visitor.lastName}`, phone: visitor.phone, email: visitor.email, address: visitor.districtAddress, branch: visitor.branch ?? "", ministries: [], services: [...new Set(visitor.visitHistory.map((visit) => visit.service))], consent: visitor.permissionToContact, preferences: { sms: visitor.communicationPreferences?.sms ?? true, email: visitor.communicationPreferences?.email ?? true }, href: `/visitors/${visitor.id}` })),
     ...evangelismContacts.map((contact) => ({ ...contact, key: `evangelism:${contact.id}`, type: "Evangelism contact", name: `${contact.firstName} ${contact.lastName}`, ministries: [], services: [], preferences: { sms: false, email: false }, href: `/follow-ups/contacts/${contact.id}` })),
-  ], [members, visitors]);
+    ...evangelismRecords.filter((record) => !record.convertedVisitorId && !record.convertedMemberId).map((record) => ({ key: `evangelism:${record.id}`, id: record.id, type: "Evangelism contact", name: getRecordName(record), phone: record.phone, email: "", address: record.districtVillage, branch: record.branch ?? "", ministries: [], services: [], consent: record.permissionToContact, preferences: { sms: false, email: false }, href: `/evangelism/${record.id}` })),
+  ], [members, visitors, evangelismRecords]);
 
   function getPerson(key) {
     const direct = people.find((person) => person.key === key);
