@@ -1,0 +1,14 @@
+CREATE TABLE evangelism_contacts (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(150) NOT NULL,
+  last_name VARCHAR(150) NULL,
+  phone VARCHAR(50) NULL,
+  gender ENUM('Male', 'Female') NULL,
+  district_village VARCHAR(255) NULL,
+  permission_to_contact BOOLEAN NOT NULL DEFAULT FALSE,
+  follow_up_needed BOOLEAN NOT NULL DEFAULT FALSE,
+  branch_id BIGINT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_evangelism_contacts_branch FOREIGN KEY (branch_id) REFERENCES branches (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

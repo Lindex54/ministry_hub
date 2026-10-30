@@ -1,0 +1,16 @@
+CREATE TABLE visitors (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(150) NOT NULL,
+  last_name VARCHAR(150) NOT NULL,
+  phone VARCHAR(50) NULL,
+  email VARCHAR(255) NULL,
+  gender ENUM('Male', 'Female') NULL,
+  district_address VARCHAR(500) NULL,
+  invited_by VARCHAR(255) NULL,
+  prayer_request TEXT NULL,
+  permission_to_contact BOOLEAN NOT NULL DEFAULT FALSE,
+  branch_id BIGINT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_visitors_branch FOREIGN KEY (branch_id) REFERENCES branches (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

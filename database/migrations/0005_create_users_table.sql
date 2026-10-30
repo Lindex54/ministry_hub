@@ -1,0 +1,22 @@
+CREATE TABLE users (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role_id BIGINT UNSIGNED NULL,
+  staff_id BIGINT UNSIGNED NULL,
+  status ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
+  last_login_at TIMESTAMP NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_users_role FOREIGN KEY (role_id) REFERENCES roles (id),
+  CONSTRAINT fk_users_staff FOREIGN KEY (staff_id) REFERENCES staff (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE user_branches (
+  user_id BIGINT UNSIGNED NOT NULL,
+  branch_id BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (user_id, branch_id),
+  CONSTRAINT fk_user_branches_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_user_branches_branch FOREIGN KEY (branch_id) REFERENCES branches (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

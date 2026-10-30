@@ -1,0 +1,20 @@
+CREATE TABLE branches (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  church_id BIGINT UNSIGNED NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  location VARCHAR(255) NULL,
+  district VARCHAR(255) NULL,
+  address VARCHAR(500) NULL,
+  phone VARCHAR(50) NULL,
+  email VARCHAR(255) NULL,
+  date_established DATE NULL,
+  leader_type ENUM('staff', 'member') NULL,
+  leader_id BIGINT UNSIGNED NULL,
+  assistant_leader_type ENUM('staff', 'member') NULL,
+  assistant_leader_id BIGINT UNSIGNED NULL,
+  description TEXT NULL,
+  status ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_branches_church FOREIGN KEY (church_id) REFERENCES churches (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -3,11 +3,36 @@
 The API is served under `/api` by the Express app in `backend/src/app.js`. Everything
 else is rendered by the Next.js frontend from the same process (`backend/src/server.js`).
 
-## Status: foundation stage
+## Status: data-access models wired, no routes yet
 
-Only infrastructure exists so far — no domain modules (members, visitors, attendance,
-evangelism, follow-ups, communications, ministries, branches, services, events, users,
-auth) have routes yet. Those are implemented one at a time; this document grows with them.
+The database layer is wired: every table in `docs/database-design.md` has a model file
+under `backend/src/modules/<area>/*.model.js` exporting async CRUD functions built on
+`getPool()` from `config/database.js` (plain parameterized SQL, no ORM) — verified live
+against the `ministry_hub` database (inserts, join-table helpers, cascading deletes all
+confirmed). No Express routes/controllers call these models yet, and the frontend still
+runs on its mock data. Routes are added one module at a time, on top of these models.
+
+Model files, by module:
+
+- `modules/churches/church.model.js` — churches
+- `modules/branches/branch.model.js` — branches
+- `modules/staff/staff.model.js` — staff
+- `modules/users/user.model.js`, `role.model.js`, `permission.model.js` — users,
+  user_branches, roles, role_permissions, permissions
+- `modules/ministries/ministry.model.js` — ministries, ministry_branches,
+  ministry↔member lookups
+- `modules/members/member.model.js` — members, member_ministries
+- `modules/visitors/visitor.model.js` — visitors, visitor_visits
+- `modules/services/service.model.js` — services, branch_services
+- `modules/evangelism/evangelism-contact.model.js`, `evangelism-encounter.model.js`,
+  `outreach-activity.model.js` — evangelism_contacts, evangelism_encounters,
+  outreach_activities, outreach_activity_team
+- `modules/follow-ups/follow-up-task.model.js` — follow_up_tasks, follow_up_task_history
+- `modules/attendance/attendance.model.js` — attendance_occurrences,
+  attendance_expected_members, attendance_records
+- `modules/events/event.model.js` — events, event_attendees
+- `modules/communications/template.model.js`, `campaign.model.js` —
+  communication_templates, communication_campaigns, communication_campaign_recipients
 
 ## Available routes
 
