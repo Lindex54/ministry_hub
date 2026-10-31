@@ -14,20 +14,28 @@ export async function findEventById(id) {
   return rows[0] ?? null;
 }
 
-export async function createEvent({ name, eventDate, branchId }) {
+export async function createEvent({ name, eventDate, eventTime, location, branchId }) {
   const [result] = await getPool().query(
-    "INSERT INTO events (name, event_date, branch_id) VALUES (?, ?, ?)",
-    [name, eventDate, branchId ?? null]
+    "INSERT INTO events (name, event_date, event_time, location, branch_id) VALUES (?, ?, ?, ?, ?)",
+    [name, eventDate, eventTime ?? null, location ?? null, branchId ?? null]
   );
   return findEventById(result.insertId);
 }
 
-export async function updateEvent(id, { name, eventDate, branchId }) {
+export async function updateEvent(id, { name, eventDate, eventTime, location, branchId }) {
   await getPool().query(
-    "UPDATE events SET name = ?, event_date = ?, branch_id = ? WHERE id = ?",
-    [name, eventDate, branchId ?? null, id]
+    "UPDATE events SET name = ?, event_date = ?, event_time = ?, location = ?, branch_id = ? WHERE id = ?",
+    [name, eventDate, eventTime ?? null, location ?? null, branchId ?? null, id]
   );
   return findEventById(id);
+}
+
+export async function listUpcomingEvents(limit = 3) {
+  const [rows] = await getPool().query(
+    "SELECT * FROM events WHERE event_date >= CURDATE() ORDER BY event_date ASC LIMIT ?",
+    [limit]
+  );
+  return rows;
 }
 
 export async function deleteEvent(id) {

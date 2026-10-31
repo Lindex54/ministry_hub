@@ -26,9 +26,10 @@ export async function findFollowUpTaskById(id) {
 }
 
 export async function createFollowUpTask(data) {
-  const values = COLUMNS.map((column) => data[column] ?? null);
+  const columns = COLUMNS.filter((column) => column in data);
+  const values = columns.map((column) => data[column]);
   const [result] = await getPool().query(
-    `INSERT INTO follow_up_tasks (${COLUMNS.join(", ")}) VALUES (${COLUMNS.map(() => "?").join(", ")})`,
+    `INSERT INTO follow_up_tasks (${columns.join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`,
     values
   );
   return findFollowUpTaskById(result.insertId);

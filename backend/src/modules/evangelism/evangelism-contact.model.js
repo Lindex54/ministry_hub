@@ -23,9 +23,10 @@ export async function findEvangelismContactById(id) {
 }
 
 export async function createEvangelismContact(data) {
-  const values = COLUMNS.map((column) => data[column] ?? null);
+  const columns = COLUMNS.filter((column) => column in data);
+  const values = columns.map((column) => data[column]);
   const [result] = await getPool().query(
-    `INSERT INTO evangelism_contacts (${COLUMNS.join(", ")}) VALUES (${COLUMNS.map(() => "?").join(", ")})`,
+    `INSERT INTO evangelism_contacts (${columns.join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`,
     values
   );
   return findEvangelismContactById(result.insertId);

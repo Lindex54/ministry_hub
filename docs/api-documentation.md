@@ -41,7 +41,25 @@ Model files, by module:
   - `200 { status: "ok", serverVersion }` when connected.
   - `503 { status: "not-configured", message }` when `DB_*`/`DATABASE_URL` are unset.
   - `503 { status: "unreachable", reason }` when configured but unreachable.
+- `GET /api/dashboard?from=YYYY-MM-DD&to=YYYY-MM-DD` — live dashboard data computed
+  from the database for the given date range (`from`/`to` optional, default to the
+  last 30 days). Built by `modules/dashboard/dashboard.service.js`, aggregating across
+  members, visitors, attendance_occurrences/records, follow_up_tasks, and events —
+  see `dashboard.service.js` for the exact bucketing/stat logic. Returns
+  `{ period, stats, attendance, membership, recentAttendance, followUps, upcomingEvents }`,
+  matching what `frontend/src/features/dashboard/components/DashboardOverview.jsx`
+  renders (the frontend's Dashboard mock data was removed; the page now fetches this
+  route live). With an empty database every figure is genuinely `0`/empty, not an error.
 - Any other `/api/*` route currently returns `404 { message }`.
+
+## Frontend ↔ backend wiring in dev
+
+`frontend/src/lib/api.js` calls `NEXT_PUBLIC_API_URL` (`.env.local`, defaults to `/api`).
+In production the unified server (`backend/src/server.js`) serves both Next.js and
+`/api/*` on one port, so relative `/api` paths just work. When the frontend dev server
+runs standalone (`cd frontend && npm run dev` on :3000, separate from the backend),
+`frontend/next.config.mjs` rewrites `/api/:path*` to `BACKEND_ORIGIN` (defaults to
+`http://localhost:5000`) so the same relative `/api` calls still reach the backend.
 
 ## Architecture conventions (for modules as they're added)
 

@@ -32,9 +32,10 @@ export async function findMemberByMembershipNumber(membershipNumber) {
 }
 
 export async function createMember(data) {
-  const values = COLUMNS.map((column) => data[column] ?? null);
+  const columns = COLUMNS.filter((column) => column in data);
+  const values = columns.map((column) => data[column]);
   const [result] = await getPool().query(
-    `INSERT INTO members (${COLUMNS.join(", ")}) VALUES (${COLUMNS.map(() => "?").join(", ")})`,
+    `INSERT INTO members (${columns.join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`,
     values
   );
   return findMemberById(result.insertId);

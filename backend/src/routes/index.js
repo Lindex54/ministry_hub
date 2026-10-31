@@ -2,6 +2,7 @@ import { Router } from "express";
 import { isDatabaseConfigured } from "../config/environment.js";
 import { testConnection } from "../config/database.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { dashboardRouter } from "./dashboard.routes.js";
 
 export const router = Router();
 
@@ -24,7 +25,9 @@ router.get(
   })
 );
 
-// Domain modules (members, visitors, attendance, evangelism, follow-ups,
-// communications, ministries, branches, services, events, users, auth, ...)
-// mount their routers here as each module is implemented, e.g.:
+router.use("/dashboard", dashboardRouter);
+
+// Remaining domain modules (members, visitors, attendance, evangelism,
+// follow-ups, communications, ministries, branches, services, events, users,
+// auth, ...) mount their routers here as each is implemented, e.g.:
 //   router.use("/members", membersRouter);

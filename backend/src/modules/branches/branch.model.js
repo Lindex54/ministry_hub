@@ -22,9 +22,10 @@ export async function findBranchById(id) {
 }
 
 export async function createBranch(data) {
-  const values = COLUMNS.map((column) => data[column] ?? null);
+  const columns = COLUMNS.filter((column) => column in data);
+  const values = columns.map((column) => data[column]);
   const [result] = await getPool().query(
-    `INSERT INTO branches (${COLUMNS.join(", ")}) VALUES (${COLUMNS.map(() => "?").join(", ")})`,
+    `INSERT INTO branches (${columns.join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`,
     values
   );
   return findBranchById(result.insertId);
