@@ -34,6 +34,9 @@ function toApiMember(row, ministryNames) {
     emergencyName: row.emergency_name ?? "",
     emergencyRelationship: row.emergency_relationship ?? "",
     emergencyPhone: row.emergency_phone ?? "",
+    consentToContact: Boolean(row.consent_to_contact),
+    smsOptIn: Boolean(row.sms_opt_in),
+    emailOptIn: Boolean(row.email_opt_in),
   };
 }
 

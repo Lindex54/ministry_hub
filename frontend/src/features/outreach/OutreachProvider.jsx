@@ -1,10 +1,11 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { api } from "@/lib/api";
 import { useMembers } from "@/features/members/MembersProvider";
 import { useVisitors } from "@/features/visitors/VisitorsProvider";
 import { mockVisitors } from "@/features/visitors/data/visitors.mock";
-import { evangelismContacts, memberPreferences, templates, workers } from "./data/outreach.mock";
+import { evangelismContacts, templates, workers } from "./data/outreach.mock";
 import { useAttendance } from "@/features/attendance/AttendanceProvider";
 import { useEvangelism } from "@/features/evangelism/EvangelismProvider";
 import { getRecordName } from "@/features/evangelism/data/evangelism.mock";
@@ -33,12 +34,22 @@ export function OutreachProvider({ children }) {
   const visitors = sourceVisitors.map(getVisitorWithAttendance);
   const [tasks, setTasks] = useState(initialTasks);
   const [campaigns, setCampaigns] = useState([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(true);
+  const [campaignsError, setCampaignsError] = useState(null);
   const [savedTemplates, setSavedTemplates] = useState(templates);
+
+  useEffect(() => {
+    let cancelled = false;
+    api("/communications/campaigns")
+      .then((data) => { if (!cancelled) setCampaigns(data); })
+      .catch((requestError) => { if (!cancelled) setCampaignsError(requestError); })
+      .finally(() => { if (!cancelled) setCampaignsLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
   const people = useMemo(() => [
     ...members.map((member) => {
-      const sourceVisitor = visitors.find((visitor) => visitor.convertedMemberId === member.id);
-      const prefs = sourceVisitor ? { consent: sourceVisitor.permissionToContact, sms: true, email: true } : memberPreferences[member.id];
-      return { key: `member:${member.id}`, id: member.id, type: "Member", name: `${member.firstName} ${member.lastName}`, phone: member.primaryPhone, email: member.email, address: member.address, branch: member.branch, ministries: member.ministries, services: [...new Set(getPersonAttendance(`member:${member.id}`).filter((item) => item.status === "Present").map((item) => item.service))], consent: prefs?.consent ?? false, preferences: { sms: prefs?.sms ?? false, email: prefs?.email ?? false }, href: `/members/${member.id}` };
+      const prefs = { consent: member.consentToContact, sms: member.smsOptIn, email: member.emailOptIn };
+      return { key: `member:${member.id}`, id: member.id, type: "Member", name: `${member.firstName} ${member.lastName}`, phone: member.primaryPhone, email: member.email, address: member.address, branch: member.branch, ministries: member.ministries, services: [...new Set(getPersonAttendance(`member:${member.id}`).filter((item) => item.status === "Present").map((item) => item.service))], consent: prefs.consent, preferences: { sms: prefs.sms, email: prefs.email }, href: `/members/${member.id}` };
     }),
     ...visitors.filter((visitor) => !visitor.convertedMemberId).map((visitor) => ({ key: `visitor:${visitor.id}`, id: visitor.id, type: "Visitor", name: `${visitor.firstName} ${visitor.lastName}`, phone: visitor.phone, email: visitor.email, address: visitor.districtAddress, branch: visitor.branch ?? "", ministries: [], services: [...new Set(visitor.visitHistory.map((visit) => visit.service))], consent: visitor.permissionToContact, preferences: { sms: visitor.communicationPreferences?.sms ?? true, email: visitor.communicationPreferences?.email ?? true }, href: `/visitors/${visitor.id}` })),
     ...evangelismContacts.map((contact) => ({ ...contact, key: `evangelism:${contact.id}`, type: "Evangelism contact", name: `${contact.firstName} ${contact.lastName}`, ministries: [], services: [], preferences: { sms: false, email: false }, href: `/follow-ups/contacts/${contact.id}` })),
@@ -53,7 +64,7 @@ export function OutreachProvider({ children }) {
   }
 
   const value = {
-    people, tasks, campaigns, getPerson, templates: savedTemplates,
+    people, tasks, campaigns, campaignsLoading, campaignsError, getPerson, templates: savedTemplates,
     addTemplate: (template) => setSavedTemplates((current) => [...current, { ...template, id: crypto.randomUUID() }]),
     getPersonTasks: (key) => tasks.filter((task) => task.personKey === key || getPerson(task.personKey)?.key === getPerson(key)?.key),
     addTask: (values) => {
@@ -62,7 +73,11 @@ export function OutreachProvider({ children }) {
       return task;
     },
     submitFeedback: (id, feedback) => setTasks((current) => current.map((task) => task.id === id ? { ...task, status: feedback.status, history: [...task.history, { ...feedback, id: crypto.randomUUID(), workerId: task.workerId, date: new Date().toISOString() }] } : task)),
-    addCampaign: (campaign) => setCampaigns((current) => [{ ...campaign, id: crypto.randomUUID(), createdAt: new Date().toISOString() }, ...current]),
+    addCampaign: async (campaign) => {
+      const created = await api.post("/communications/campaigns/email/send", campaign);
+      setCampaigns((current) => [created, ...current]);
+      return created;
+    },
     updateCampaign: (id, changes) => setCampaigns((current) => current.map((campaign) => campaign.id === id ? { ...campaign, ...changes } : campaign)),
   };
   return <OutreachContext.Provider value={value}>{children}</OutreachContext.Provider>;

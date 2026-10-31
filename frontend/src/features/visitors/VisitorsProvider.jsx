@@ -1,61 +1,59 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
-import { mockVisitors } from "./data/visitors.mock";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { api } from "@/lib/api";
 
 const VisitorsContext = createContext(null);
 
 export function VisitorsProvider({ children }) {
-  const [visitors, setVisitors] = useState(mockVisitors);
+  const [visitors, setVisitors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [memberConversionVisitorId, setMemberConversionVisitorId] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api("/visitors")
+      .then((data) => { if (!cancelled) setVisitors(data); })
+      .catch((requestError) => { if (!cancelled) setError(requestError); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const value = useMemo(() => ({
     visitors,
-    getVisitor: (id) => visitors.find((visitor) => visitor.id === id),
-    addVisitor: (visitor) => {
-      const visitId = `visit-${crypto.randomUUID()}`;
-      const normalizedPhone = visitor.phone.replace(/[\s()-]/g, "").replace(/^0/, "+256");
-      const existing = visitors.find((item) => item.phone.replace(/[\s()-]/g, "").replace(/^0/, "+256") === normalizedPhone);
-      if (existing) {
-        const updated = {
-          ...existing,
-          firstName: visitor.firstName || existing.firstName,
-          lastName: visitor.lastName || existing.lastName,
-          email: visitor.email || existing.email,
-          gender: visitor.gender || existing.gender,
-          districtAddress: visitor.districtAddress || existing.districtAddress,
-          invitedBy: visitor.invitedBy || existing.invitedBy,
-          prayerRequest: visitor.prayerRequest || existing.prayerRequest,
-          permissionToContact: existing.permissionToContact || visitor.permissionToContact,
-          visitHistory: [...existing.visitHistory, { id: visitId, date: visitor.dateOfVisit, service: visitor.serviceAttended, notes: "Returning visit recorded during registration." }],
-        };
-        setVisitors((current) => current.map((item) => item.id === existing.id ? updated : item));
-        return { visitor: updated, isReturning: true };
-      }
-      const id = `visitor-${crypto.randomUUID()}`;
-      const next = {
-        ...visitor,
-        id,
-        visitHistory: [{ id: visitId, date: visitor.dateOfVisit, service: visitor.serviceAttended, notes: "Initial visitor registration." }],
-        followUps: [],
-      };
-      delete next.dateOfVisit;
-      delete next.serviceAttended;
-      setVisitors((current) => [next, ...current]);
-      return { visitor: next, isReturning: false };
+    loading,
+    error,
+    getVisitor: (id) => visitors.find((visitor) => visitor.id === String(id)),
+    addVisitor: async (values) => {
+      const result = await api.post("/visitors", values);
+      setVisitors((current) => {
+        const exists = current.some((visitor) => visitor.id === result.visitor.id);
+        return exists
+          ? current.map((visitor) => (visitor.id === result.visitor.id ? result.visitor : visitor))
+          : [result.visitor, ...current];
+      });
+      return result;
     },
-    updateVisitor: (id, changes) => setVisitors((current) => current.map((visitor) => visitor.id === id ? { ...visitor, ...changes } : visitor)),
-    addVisit: (id, visit) => setVisitors((current) => current.map((visitor) => visitor.id === id ? { ...visitor, visitHistory: [...visitor.visitHistory, { ...visit, id: `visit-${crypto.randomUUID()}` }] } : visitor)),
-    addFollowUp: (id, followUp) => setVisitors((current) => current.map((visitor) => visitor.id === id ? { ...visitor, followUps: [...visitor.followUps, { ...followUp, id: `follow-${crypto.randomUUID()}` }] } : visitor)),
-    updateFollowUp: (visitorId, followUpId, changes) => setVisitors((current) => current.map((visitor) => visitor.id === visitorId ? { ...visitor, followUps: visitor.followUps.map((item) => item.id === followUpId ? { ...item, ...changes } : item) } : visitor)),
+    updateVisitor: async (id, changes) => {
+      const updated = await api.patch(`/visitors/${id}`, changes);
+      setVisitors((current) => current.map((visitor) => (visitor.id === String(id) ? updated : visitor)));
+      return updated;
+    },
+    addVisit: async (id, visit) => {
+      const updated = await api.post(`/visitors/${id}/visits`, visit);
+      setVisitors((current) => current.map((visitor) => (visitor.id === String(id) ? updated : visitor)));
+      return updated;
+    },
     memberConversionVisitorId,
     startMemberConversion: setMemberConversionVisitorId,
-    finishMemberConversion: (visitorId, memberId) => {
-      setVisitors((current) => current.map((visitor) => visitor.id === visitorId ? { ...visitor, convertedMemberId: memberId } : visitor));
+    finishMemberConversion: async (visitorId, memberId) => {
+      const updated = await api.patch(`/visitors/${visitorId}`, { convertedMemberId: memberId });
+      setVisitors((current) => current.map((visitor) => (visitor.id === String(visitorId) ? updated : visitor)));
       setMemberConversionVisitorId(null);
     },
     cancelMemberConversion: () => setMemberConversionVisitorId(null),
-  }), [memberConversionVisitorId, visitors]);
+  }), [visitors, loading, error, memberConversionVisitorId]);
 
   return <VisitorsContext.Provider value={value}>{children}</VisitorsContext.Provider>;
 }

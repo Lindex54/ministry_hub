@@ -2,7 +2,7 @@ import { getPool } from "../../config/database.js";
 
 const COLUMNS = [
   "first_name", "last_name", "phone", "email", "gender", "district_address",
-  "invited_by", "prayer_request", "permission_to_contact", "branch_id",
+  "invited_by", "prayer_request", "permission_to_contact", "branch_id", "converted_member_id",
 ];
 
 export async function listVisitors({ branchId } = {}) {

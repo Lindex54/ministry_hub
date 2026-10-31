@@ -2,7 +2,7 @@ import { getPool } from "../../config/database.js";
 
 const COLUMNS = [
   "title", "channel", "subject", "body", "timing", "scheduled_at", "association",
-  "status", "recipient_count", "simulated_at", "created_by",
+  "status", "recipient_count", "simulated_at", "sent_at", "created_by",
 ];
 
 export async function listCampaigns() {
@@ -49,12 +49,25 @@ export async function getCampaignRecipients(campaignId) {
 
 export async function addCampaignRecipients(campaignId, recipients) {
   if (!recipients.length) return getCampaignRecipients(campaignId);
-  const values = recipients.map(({ personType, personId, destination }) => [
-    campaignId, personType, personId, destination ?? null,
+  const values = recipients.map(({ personType, personId, name, destination, deliveryStatus }) => [
+    campaignId, personType, personId, name ?? null, destination ?? null, deliveryStatus ?? "pending",
   ]);
   await getPool().query(
-    "INSERT INTO communication_campaign_recipients (campaign_id, person_type, person_id, destination) VALUES ?",
+    "INSERT INTO communication_campaign_recipients (campaign_id, person_type, person_id, name, destination, delivery_status) VALUES ?",
     [values]
   );
   return getCampaignRecipients(campaignId);
+}
+
+export async function updateCampaignRecipient(id, data) {
+  const allowed = ["delivery_status", "error_message", "sent_at"];
+  const columns = allowed.filter((column) => column in data);
+  if (!columns.length) return null;
+  const assignments = columns.map((column) => `${column} = ?`).join(", ");
+  await getPool().query(
+    `UPDATE communication_campaign_recipients SET ${assignments} WHERE id = ?`,
+    [...columns.map((column) => data[column]), id]
+  );
+  const [rows] = await getPool().query("SELECT * FROM communication_campaign_recipients WHERE id = ?", [id]);
+  return rows[0] ?? null;
 }

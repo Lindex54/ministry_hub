@@ -24,7 +24,16 @@ function ErrorMessage({ error }) { return error ? <FieldError errors={[error]} /
 export function RecordVisitDialog({ visitor }) {
   const [open, setOpen] = useState(false); const { addVisit } = useVisitors();
   const form = useForm({ resolver: zodResolver(visitSchema), defaultValues: { date: format(new Date(), "yyyy-MM-dd"), service: "", notes: "" } });
-  function submit(values) { addVisit(visitor.id, values); toast.success("Additional visit recorded. Visitor status updated automatically."); setOpen(false); form.reset({ date: format(new Date(), "yyyy-MM-dd"), service: "", notes: "" }); }
+  async function submit(values) {
+    try {
+      await addVisit(visitor.id, values);
+      toast.success("Additional visit recorded. Visitor status updated automatically.");
+      setOpen(false);
+      form.reset({ date: format(new Date(), "yyyy-MM-dd"), service: "", notes: "" });
+    } catch (error) {
+      toast.error(error.message || "Could not record this visit. Please try again.");
+    }
+  }
   return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button variant="outline"><CalendarPlus />Record visit</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Record additional visit</DialogTitle><DialogDescription>This visit will automatically classify the visitor as returning.</DialogDescription></DialogHeader><form className="space-y-4" onSubmit={form.handleSubmit(submit)} noValidate><Controller name="date" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel htmlFor="visit-date">Date of visit <span className="text-destructive">*</span></FieldLabel><Input {...field} id="visit-date" type="date" aria-invalid={fieldState.invalid} /><ErrorMessage error={fieldState.error} /></Field>} /><Controller name="service" control={form.control} render={({ field, fieldState }) => <Field data-invalid={fieldState.invalid}><FieldLabel>Service attended <span className="text-destructive">*</span></FieldLabel><Select value={field.value || undefined} onValueChange={field.onChange}><SelectTrigger className="w-full" aria-invalid={fieldState.invalid}><SelectValue placeholder="Select service" /></SelectTrigger><SelectContent>{serviceOptions.map((service) => <SelectItem key={service} value={service}>{service}</SelectItem>)}</SelectContent></Select><ErrorMessage error={fieldState.error} /></Field>} /><Controller name="notes" control={form.control} render={({ field }) => <Field><FieldLabel htmlFor="visit-notes">Visit notes</FieldLabel><Textarea {...field} id="visit-notes" placeholder="Optional attendance notes" /></Field>} /><DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit">Save visit</Button></DialogFooter></form></DialogContent></Dialog>;
 }
 

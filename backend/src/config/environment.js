@@ -7,6 +7,11 @@ function parseList(value) {
     .filter(Boolean);
 }
 
+function parseBoolean(value, defaultValue = false) {
+  if (value === undefined || value === "") return defaultValue;
+  return value.toLowerCase() === "true";
+}
+
 const nodeEnv = process.env.NODE_ENV ?? "development";
 
 export const environment = {
@@ -40,6 +45,17 @@ export const environment = {
     windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 15 * 60 * 1000),
     max: Number(process.env.RATE_LIMIT_MAX ?? 300),
   },
+
+  smtp: {
+    host: process.env.SMTP_HOST ?? "",
+    port: Number(process.env.SMTP_PORT ?? 465),
+    secure: parseBoolean(process.env.SMTP_SECURE, true),
+    user: process.env.SMTP_USER ?? "",
+    password: process.env.SMTP_PASSWORD ?? "",
+    fromEmail: process.env.SMTP_FROM_EMAIL ?? process.env.SMTP_USER ?? "",
+    fromName: process.env.SMTP_FROM_NAME ?? "Ministry Hub",
+    replyTo: process.env.SMTP_REPLY_TO || undefined,
+  },
 };
 
 export function isDatabaseConfigured() {
@@ -48,4 +64,9 @@ export function isDatabaseConfigured() {
 
 export function isAuthConfigured() {
   return Boolean(environment.jwt.secret);
+}
+
+export function isEmailConfigured() {
+  const { host, port, user, password, fromEmail } = environment.smtp;
+  return Boolean(host && port && user && password && fromEmail);
 }

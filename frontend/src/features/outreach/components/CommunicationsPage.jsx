@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, CalendarClock, MessageSquare, ListChecks } from "lucide-react";
-import { toast } from "sonner";
+import { Mail, CircleCheckBig, MessageSquare, ListChecks } from "lucide-react";
 import { PageHeader, ResponsiveGrid } from "@/components/shared/PageHeader";
 import { StatCard } from "@/components/shared/StatCard";
 import { DataTable } from "@/components/tables/DataTable";
@@ -26,35 +25,12 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useOutreach } from "../OutreachProvider";
 import { events } from "../data/outreach.mock";
-import { personalizeMessage, resolveRecipients } from "../outreach-utils.mjs";
+import { personalizeMessage } from "../outreach-utils.mjs";
 import { CampaignComposer } from "./CampaignComposer";
 
 export function CommunicationsPage() {
-  const { campaigns, people, updateCampaign } = useOutreach();
+  const { campaigns, campaignsError } = useOutreach();
   const [selected, setSelected] = useState(null);
-  function simulate(campaign) {
-    const result = resolveRecipients(
-      people,
-      campaign.selection,
-      campaign.channel,
-      events,
-    );
-    if (!result.eligible.length) {
-      toast.error("No eligible recipients remain. Campaign was not simulated.");
-      return;
-    }
-    updateCampaign(campaign.id, {
-      status: "Simulation recorded — not sent",
-      simulatedAt: new Date().toISOString(),
-      recipientCount: result.eligible.length,
-      recipients: result.eligible.map((person) => ({
-        key: person.key,
-        name: person.name,
-        destination: campaign.channel === "sms" ? person.phone : person.email,
-      })),
-    });
-    toast.success("Simulation recorded. No SMS or email was sent.");
-  }
   const columns = [
     { accessorKey: "title", header: "Campaign" },
     {
@@ -69,12 +45,9 @@ export function CommunicationsPage() {
       cell: ({ row }) => <Badge variant="outline">{row.original.status}</Badge>,
     },
     {
-      id: "schedule",
-      header: "Scheduled (Kampala)",
-      accessorFn: (campaign) =>
-        campaign.timing === "scheduled"
-          ? campaign.scheduledAt.replace("T", " ")
-          : "Immediate simulation",
+      id: "sentAt",
+      header: "Sent",
+      accessorFn: (campaign) => campaign.sentAt ? new Date(campaign.sentAt).toLocaleString() : "Not sent",
     },
     {
       id: "actions",
@@ -88,28 +61,6 @@ export function CommunicationsPage() {
           >
             Details
           </Button>
-          {row.original.status === "Scheduled (mock)" ? (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => simulate(row.original)}
-              >
-                Simulate now
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() =>
-                  updateCampaign(row.original.id, {
-                    status: "Cancelled (mock)",
-                  })
-                }
-              >
-                Cancel
-              </Button>
-            </>
-          ) : null}
         </div>
       ),
     },
@@ -118,18 +69,17 @@ export function CommunicationsPage() {
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8">
       <PageHeader
         title="Communications"
-        description="Compose bulk SMS and email campaigns for church groups or selected individuals."
+        description="Send personalized email campaigns to consenting members and visitors."
       />
       <Alert className="border-primary/20 bg-primary/5">
         <Mail />
-        <AlertTitle>Campaign simulation · temporary data</AlertTitle>
+        <AlertTitle>SMTP email delivery</AlertTitle>
         <AlertDescription>
-          Compose, preview, schedule, and simulate campaigns. No messages are
-          sent and no delivery is reported. Data resets on refresh.
-          Administrator and communications-officer permissions will be enforced
-          when the backend is implemented.
+          Confirmed campaigns send real email immediately and their delivery results are saved.
+          SMS and scheduled delivery are not enabled yet.
         </AlertDescription>
       </Alert>
+      {campaignsError ? <Alert variant="destructive"><AlertTitle>Could not load communication history</AlertTitle><AlertDescription>{campaignsError.message}</AlertDescription></Alert> : null}
       <ResponsiveGrid>
         <StatCard
           title="Total campaigns"
@@ -137,13 +87,13 @@ export function CommunicationsPage() {
           icon={ListChecks}
         />
         <StatCard
-          title="Scheduled"
+          title="Sent successfully"
           value={
             campaigns.filter(
-              (campaign) => campaign.status === "Scheduled (mock)",
+              (campaign) => campaign.status === "Sent",
             ).length
           }
-          icon={CalendarClock}
+          icon={CircleCheckBig}
         />
         <StatCard
           title="SMS campaigns"
@@ -175,8 +125,7 @@ export function CommunicationsPage() {
             <CardHeader className="border-b">
               <CardTitle>Communication history</CardTitle>
               <CardDescription>
-                Mock schedules and simulations. Campaigns never create
-                individual follow-up assignments.
+                Saved SMTP campaigns and per-recipient delivery outcomes.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -226,13 +175,14 @@ export function CommunicationsPage() {
                 columns={[
                   { accessorKey: "name", header: "Recipient" },
                   { accessorKey: "destination", header: "Destination" },
+                  { accessorKey: "deliveryStatus", header: "Delivery" },
+                  { accessorKey: "errorMessage", header: "Error" },
                 ]}
                 data={selected.recipients}
                 enableSelection={false}
               />
               <p className="text-xs text-muted-foreground">
-                Recipient snapshot at confirmation. Delivery: not attempted. No
-                real messages were sent.
+                Recipient snapshot and SMTP outcome recorded when the campaign was sent.
               </p>
             </>
           ) : null}

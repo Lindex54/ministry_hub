@@ -6,6 +6,8 @@ import { dashboardRouter } from "./dashboard.routes.js";
 import { membersRouter } from "./members.routes.js";
 import { branchesRouter } from "./branches.routes.js";
 import { ministriesRouter } from "./ministries.routes.js";
+import { visitorsRouter } from "./visitors.routes.js";
+import { communicationsRouter } from "./communications.routes.js";
 
 export const router = Router();
 
@@ -32,7 +34,9 @@ router.use("/dashboard", dashboardRouter);
 router.use("/members", membersRouter);
 router.use("/branches", branchesRouter);
 router.use("/ministries", ministriesRouter);
+router.use("/visitors", visitorsRouter);
+router.use("/communications", communicationsRouter);
 
-// Remaining domain modules (visitors, attendance, evangelism, follow-ups,
-// communications, services, events, users, auth, ...) mount their routers
+// Remaining domain modules (attendance, evangelism, follow-ups,
+// services, events, users, auth, ...) mount their routers
 // here as each is implemented.

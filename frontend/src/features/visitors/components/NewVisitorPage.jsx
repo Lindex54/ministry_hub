@@ -21,27 +21,31 @@ export function NewVisitorPage() {
   const { registrationOccurrence, completeRegistration, cancelRegistration } = useAttendance();
   const { visitorConversionRecordId, getRecord, finishVisitorConversion, cancelVisitorConversion } = useEvangelism();
   const evangelismRecord = !registrationOccurrence && visitorConversionRecordId ? getRecord(visitorConversionRecordId) : null;
-  function handleSubmit(values) {
-    if (registrationOccurrence) {
-      const existingMember = members.find((member) => normalizePhone(member.primaryPhone) === normalizePhone(values.phone));
-      if (existingMember) {
-        completeRegistration(existingMember.sourceVisitorId ? `visitor:${existingMember.sourceVisitorId}` : `member:${existingMember.id}`, "Member");
-        toast.info("This person is already a member. Their existing record is available in the register."); router.push("/attendance"); return;
+  async function handleSubmit(values) {
+    try {
+      if (registrationOccurrence) {
+        const existingMember = members.find((member) => normalizePhone(member.primaryPhone) === normalizePhone(values.phone));
+        if (existingMember) {
+          completeRegistration(existingMember.sourceVisitorId ? `visitor:${existingMember.sourceVisitorId}` : `member:${existingMember.id}`, "Member");
+          toast.info("This person is already a member. Their existing record is available in the register."); router.push("/attendance"); return;
+        }
       }
+      const result = await addVisitor(registrationOccurrence ? { ...values, branch: registrationOccurrence.branch } : values);
+      if (registrationOccurrence) {
+        completeRegistration(`visitor:${result.visitor.id}`);
+        toast.success(result.isReturning ? "Existing visitor found. You can mark their attendance in the register." : "Visitor registered. You can now mark them present in the register.");
+        router.push("/attendance"); return;
+      }
+      if (evangelismRecord) {
+        finishVisitorConversion(evangelismRecord.id, result.visitor.id);
+        toast.success(`${values.firstName} ${values.lastName} was registered as a visitor from their evangelism record.`);
+        router.push(`/visitors/${result.visitor.id}`); return;
+      }
+      toast.success(result.isReturning ? `${values.firstName} ${values.lastName} was identified as a returning visitor and the visit was added.` : `${values.firstName} ${values.lastName} was added to the visitors directory.`);
+      router.push(`/visitors/${result.visitor.id}`);
+    } catch (error) {
+      toast.error(error.message || "Could not register this visitor. Please try again.");
     }
-    const result = addVisitor(registrationOccurrence ? { ...values, branch: registrationOccurrence.branch } : values);
-    if (registrationOccurrence) {
-      completeRegistration(`visitor:${result.visitor.id}`);
-      toast.success(result.isReturning ? "Existing visitor found. You can mark their attendance in the register." : "Visitor registered. You can now mark them present in the register.");
-      router.push("/attendance"); return;
-    }
-    if (evangelismRecord) {
-      finishVisitorConversion(evangelismRecord.id, result.visitor.id);
-      toast.success(`${values.firstName} ${values.lastName} was registered as a visitor from their evangelism record.`);
-      router.push(`/visitors/${result.visitor.id}`); return;
-    }
-    toast.success(result.isReturning ? `${values.firstName} ${values.lastName} was identified as a returning visitor and the visit was added.` : `${values.firstName} ${values.lastName} was added to the mock visitors directory.`);
-    router.push(`/visitors/${result.visitor.id}`);
   }
   function cancel() {
     cancelRegistration();

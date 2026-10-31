@@ -65,6 +65,32 @@ Model files, by module:
   lists. Added only so Members has real options to select from; full CRUD for these two
   modules comes when Ministries/Branches itself is wired (it still runs on mock data in
   the frontend).
+- `GET /api/visitors` — list (camelCase, each with a `visitHistory` array joined from
+  `visitor_visits` + `services`). `GET /api/visitors/:id` — single visitor, `404` if
+  missing. `POST /api/visitors` — create; if the submitted `phone` (normalized the same
+  way as the frontend's `normalizePhone`) matches an existing visitor, the request is
+  treated as a returning visit instead of a new record: non-empty fields are merged in,
+  consent is OR'd (never revoked by a registration that leaves it unchecked), and a new
+  `visitor_visits` row is added — mirrors the old mock `VisitorsProvider.addVisitor`
+  dedupe behavior exactly. Response is `{ visitor, isReturning }`. `PATCH
+  /api/visitors/:id` — partial update, also accepts `convertedMemberId` (set when a
+  visitor is registered as a member, so "Register as member" doesn't re-offer an
+  already-converted visitor — see the `converted_member_id` column added in migration
+  `0019`). `POST /api/visitors/:id/visits` — records an additional visit
+  (`{date, service, notes}`), resolving `service` by name against the real `services`
+  table. Built by `modules/visitors/{visitor.service,visitor.controller,visitor.validation}.js`.
+- `GET /api/communications/campaigns` — returns persisted communication campaign
+  history with per-recipient SMTP delivery outcomes. `POST
+  /api/communications/campaigns/email/send` — immediately sends one personalized
+  plain-text email per eligible recipient through the configured SMTP mailbox. The
+  body is `{ title, subject, body, association?, recipients: [{ personType,
+  personId }] }`; `personType` is `member` or `visitor`. Before sending, the backend
+  resolves addresses from MySQL rather than trusting browser-submitted addresses,
+  re-checks contact consent and email opt-in, removes duplicate destinations, and
+  replaces `{{name}}` separately for each recipient. The campaign status is `Sent`,
+  `Partially sent`, or `Failed`; each recipient records its own outcome. SMTP settings
+  are documented in `backend/.env.example` and `docs/deployment.md`. SMS and scheduled
+  delivery are not implemented.
 - Any other `/api/*` route currently returns `404 { message }`.
 
 ## Members — first fully-wired CRUD module
@@ -78,11 +104,30 @@ fetches/creates/updates through `/api/members` instead of mock data
 directly) instead of `useMinistries()`, because Ministries/Branches itself is still
 mock-only — using the real `MinistriesProvider` would have emptied out those
 still-mock pages. `database/seeders/` is still empty by convention; the real branches
-(4) and ministries (12) that make the Members form usable today were seeded via a
-one-off idempotent script, `backend/src/db/seed-branches-ministries.mjs` (run with
-`node src/db/seed-branches-ministries.mjs` from `backend/`), matching the names already
-used throughout the still-mock frontend so branch/ministry names stay consistent across
-modules until Ministries/Branches is wired for real.
+(4), ministries (12), and services (4) that make the Members/Visitors forms usable
+today were seeded via a one-off idempotent script,
+`backend/src/db/seed-reference-data.mjs` (run with `node src/db/seed-reference-data.mjs`
+from `backend/`), matching the names already used throughout the still-mock frontend so
+branch/ministry/service names stay consistent across modules until Ministries/Branches/
+Services is wired for real.
+
+## Visitors — second fully-wired CRUD module
+
+Same pattern as Members: `frontend/src/features/visitors/VisitorsProvider.jsx` fetches/
+creates/updates through `/api/visitors` instead of `mockVisitors`. Unlike Members,
+`visitors.mock.js` was **not** trimmed — `mockVisitors` is still a real dependency of
+two other still-mock modules (`attendance/data/attendance.mock.js`'s seed registers,
+`outreach/OutreachProvider.jsx`'s unified people list), so deleting it would have broken
+those pages. Only `VisitorsProvider` stopped importing it. The visitor profile's
+follow-up list was already sourced from `useOutreach().getPersonTasks(...)`, not the
+mock `visitor.followUps` array, so no follow-up wiring was needed here — the API always
+returns `followUps: []` for parity, and real follow-up persistence is Outreach's job
+when that module gets wired. "Export visitors" now writes a real `.xlsx` file
+client-side via `exceljs` (dynamically imported in `VisitorsOverview.jsx`'s
+`exportVisitors()`, so it's not in the main bundle) instead of the old CSV. Note: `xlsx`
+(SheetJS) was tried first but has an unpatched high-severity advisory on the npm
+registry (fixAvailable: false) — `exceljs` has none, so that's the standing choice for
+any future spreadsheet export/import work in this project.
 
 ## Frontend ↔ backend wiring in dev
 

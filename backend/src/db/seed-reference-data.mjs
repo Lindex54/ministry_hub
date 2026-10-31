@@ -1,11 +1,13 @@
-// One-off seed: creates the church, the four church branches, and the standard
-// ministries already shown throughout the (still mostly mock) frontend, so the
-// newly-wired Members module has real branches/ministries to attach records to.
+// One-off seed: creates the church, the four church branches, the standard
+// ministries, and the four recurring services already shown throughout the
+// (still mostly mock) frontend, so newly-wired modules (Members, Visitors, ...)
+// have real reference rows to attach records to.
 // Idempotent — safe to run more than once; skips anything that already exists by name.
-import { getPool, closeDatabase } from "../config/database.js";
+import { closeDatabase } from "../config/database.js";
 import { listChurches, createChurch } from "../modules/churches/church.model.js";
 import { listBranches, createBranch } from "../modules/branches/branch.model.js";
 import { listMinistries, createMinistry } from "../modules/ministries/ministry.model.js";
+import { listServices, createService } from "../modules/services/service.model.js";
 
 const BRANCHES = [
   { name: "Central Campus", location: "Kampala Central", district: "Kampala", address: "Plot 12, Kampala Road, Kampala", phone: "+256 414 123 456", email: "central@ministryhub.org", date_established: "2008-01-10", description: "The founding campus and administrative headquarters of Ministry Hub.", status: "Active" },
@@ -18,6 +20,8 @@ const MINISTRIES = [
   "Worship", "Choir", "Children's Ministry", "Hospitality", "Media", "Men's Ministry",
   "Outreach", "Prayer", "Women's Ministry", "Youth Ministry", "Ushers", "Evangelism",
 ];
+
+const SERVICES = ["Sunday Main Service", "Wednesday Fellowship", "Friday Prayer Meeting", "Youth Worship Night"];
 
 async function run() {
   const existingChurches = await listChurches();
@@ -42,6 +46,16 @@ async function run() {
     }
     const created = await createMinistry({ name, status: "Active" });
     console.log(`[seed] Created ministry: ${created.name} (#${created.id})`);
+  }
+
+  const existingServices = await listServices();
+  for (const name of SERVICES) {
+    if (existingServices.some((row) => row.name === name)) {
+      console.log(`[seed] Service already exists: ${name}`);
+      continue;
+    }
+    const created = await createService({ name });
+    console.log(`[seed] Created service: ${created.name} (#${created.id})`);
   }
 }
 
