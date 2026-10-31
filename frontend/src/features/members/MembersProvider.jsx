@@ -1,35 +1,40 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
-import { mockMembers } from "./data/members.mock";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { api } from "@/lib/api";
 
 const MembersContext = createContext(null);
 
 export function MembersProvider({ children }) {
-  const [members, setMembers] = useState(mockMembers);
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api("/members")
+      .then((data) => { if (!cancelled) setMembers(data); })
+      .catch((requestError) => { if (!cancelled) setError(requestError); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const value = useMemo(() => ({
     members,
-    getMember: (id) => members.find((member) => member.id === id),
-    getNextMembershipNumber: () => {
-      const nextNumber = members.reduce((highest, member) => {
-        const number = Number(member.membershipNumber.split("-").at(-1));
-        return Number.isFinite(number) ? Math.max(highest, number) : highest;
-      }, 0) + 1;
-      return `MH-2026-${String(nextNumber).padStart(4, "0")}`;
+    loading,
+    error,
+    getMember: (id) => members.find((member) => member.id === String(id)),
+    addMember: async (values) => {
+      const created = await api.post("/members", values);
+      setMembers((current) => [created, ...current]);
+      return created;
     },
-    addMember: (member) => {
-      const id = `member-${crypto.randomUUID()}`;
-      const next = { ...member, id };
-      setMembers((current) => [next, ...current]);
-      return next;
+    updateMember: async (id, changes) => {
+      const updated = await api.patch(`/members/${id}`, changes);
+      setMembers((current) => current.map((member) => (member.id === String(id) ? updated : member)));
+      return updated;
     },
-    updateMember: (id, changes) => {
-      setMembers((current) => current.map((member) => (
-        member.id === id ? { ...member, ...changes } : member
-      )));
-    },
-  }), [members]);
+  }), [members, loading, error]);
 
   return <MembersContext.Provider value={value}>{children}</MembersContext.Provider>;
 }

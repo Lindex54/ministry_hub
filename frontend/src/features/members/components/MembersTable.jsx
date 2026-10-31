@@ -54,7 +54,9 @@ export function MembersTable() {
     {
       accessorKey: "dateJoined",
       header: "Date joined",
-      cell: ({ row }) => new Intl.DateTimeFormat("en-UG", { dateStyle: "medium" }).format(new Date(`${row.original.dateJoined}T00:00:00`)),
+      cell: ({ row }) => row.original.dateJoined
+        ? new Intl.DateTimeFormat("en-UG", { dateStyle: "medium" }).format(new Date(`${row.original.dateJoined}T00:00:00`))
+        : "Not provided",
     },
     {
       accessorKey: "status",
@@ -81,8 +83,9 @@ export function MembersTable() {
               <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}><Pencil />Edit information</Link></DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => {
-                updateMember(member.id, { status: nextStatus });
-                toast.success(`${getMemberDisplayName(member)} marked ${nextStatus.toLowerCase()}.`);
+                updateMember(member.id, { status: nextStatus })
+                  .then(() => toast.success(`${getMemberDisplayName(member)} marked ${nextStatus.toLowerCase()}.`))
+                  .catch((error) => toast.error(error.message || "Could not update this member's status."));
               }}>
                 {nextStatus === "Active" ? <UserCheck /> : <UserX />}
                 Mark {nextStatus.toLowerCase()}

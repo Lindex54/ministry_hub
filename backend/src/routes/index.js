@@ -3,6 +3,9 @@ import { isDatabaseConfigured } from "../config/environment.js";
 import { testConnection } from "../config/database.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { dashboardRouter } from "./dashboard.routes.js";
+import { membersRouter } from "./members.routes.js";
+import { branchesRouter } from "./branches.routes.js";
+import { ministriesRouter } from "./ministries.routes.js";
 
 export const router = Router();
 
@@ -26,8 +29,10 @@ router.get(
 );
 
 router.use("/dashboard", dashboardRouter);
+router.use("/members", membersRouter);
+router.use("/branches", branchesRouter);
+router.use("/ministries", ministriesRouter);
 
-// Remaining domain modules (members, visitors, attendance, evangelism,
-// follow-ups, communications, ministries, branches, services, events, users,
-// auth, ...) mount their routers here as each is implemented, e.g.:
-//   router.use("/members", membersRouter);
+// Remaining domain modules (visitors, attendance, evangelism, follow-ups,
+// communications, services, events, users, auth, ...) mount their routers
+// here as each is implemented.

@@ -33,13 +33,17 @@ function Detail({ label, value, icon: Icon, href }) {
 export function MemberProfilePage() {
   const { id } = useParams();
   const router = useRouter();
-  const { getMember, updateMember } = useMembers();
+  const { getMember, updateMember, loading } = useMembers();
   const member = getMember(id);
 
   if (!member) {
     return (
       <div className="mx-auto w-full max-w-3xl space-y-6">
-        <Alert variant="destructive"><UsersRound /><AlertTitle>Member not found</AlertTitle><AlertDescription>This mock member record does not exist or was reset when the page refreshed.</AlertDescription></Alert>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading member…</p>
+        ) : (
+          <Alert variant="destructive"><UsersRound /><AlertTitle>Member not found</AlertTitle><AlertDescription>This member record does not exist.</AlertDescription></Alert>
+        )}
         <Button asChild variant="outline"><Link href="/members"><ArrowLeft />Return to members</Link></Button>
       </div>
     );
@@ -56,7 +60,6 @@ export function MemberProfilePage() {
         actions={<><Button variant="outline" onClick={() => router.push("/members")}><ArrowLeft />Members</Button><Button asChild><Link href={`/members/${member.id}/edit`}><Pencil />Edit member</Link></Button></>}
       />
 
-      <Alert className="border-primary/20 bg-primary/5"><UsersRound /><AlertTitle>Mock member record</AlertTitle><AlertDescription>Changes to this profile are temporary and will reset when the browser is refreshed.</AlertDescription></Alert>
 
       <Card className="overflow-hidden">
         <div className="h-24 bg-[linear-gradient(110deg,var(--primary),var(--accent))] opacity-90" />
@@ -65,7 +68,11 @@ export function MemberProfilePage() {
             <MemberAvatar member={member} className="size-24 border-4 border-card text-2xl ring-0" />
             <div className="space-y-1 pb-1"><div className="flex flex-wrap items-center gap-2"><h2 className="text-2xl font-bold">{name}</h2><MemberStatusBadge status={member.status} /></div><p className="text-sm text-muted-foreground">{member.membershipNumber} · {member.branch}</p></div>
           </div>
-          <Button variant="outline" onClick={() => { updateMember(member.id, { status: nextStatus }); toast.success(`${name} marked ${nextStatus.toLowerCase()}.`); }}>
+          <Button variant="outline" onClick={() => {
+            updateMember(member.id, { status: nextStatus })
+              .then(() => toast.success(`${name} marked ${nextStatus.toLowerCase()}.`))
+              .catch((error) => toast.error(error.message || "Could not update this member's status."));
+          }}>
             {nextStatus === "Active" ? <UserCheck /> : <UserX />}Mark {nextStatus.toLowerCase()}
           </Button>
         </CardContent>

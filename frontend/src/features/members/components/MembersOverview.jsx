@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { UserCheck, UserPlus, Users, UserX } from "lucide-react";
+import { AlertTriangle, UserCheck, UserPlus, Users, UserX } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +12,8 @@ import { useMembers } from "../MembersProvider";
 import { MembersTable } from "./MembersTable";
 
 export function MembersOverview() {
-  const { members } = useMembers();
-  const newMemberCutoff = "2026-08-26";
+  const { members, loading, error } = useMembers();
+  const newMemberCutoff = new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10);
   const stats = {
     total: members.length,
     active: members.filter((member) => member.status === "Active").length,
@@ -29,11 +29,13 @@ export function MembersOverview() {
         actions={<Button asChild><Link href="/members/new"><UserPlus />Add member</Link></Button>}
       />
 
-      <Alert className="border-primary/20 bg-primary/5">
-        <Users />
-        <AlertTitle>Demonstration data</AlertTitle>
-        <AlertDescription>Member changes work across these pages, but are stored only in memory and reset when the browser is refreshed.</AlertDescription>
-      </Alert>
+      {error ? (
+        <Alert variant="destructive">
+          <AlertTriangle />
+          <AlertTitle>Could not load members</AlertTitle>
+          <AlertDescription>Check that the backend server is running, then refresh this page.</AlertDescription>
+        </Alert>
+      ) : null}
 
       <FadeIn>
         <ResponsiveGrid>
@@ -47,10 +49,10 @@ export function MembersOverview() {
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Members directory</CardTitle>
-          <CardDescription>Search, filter, sort, and manage the current mock membership records.</CardDescription>
+          <CardDescription>Search, filter, sort, and manage church membership records.</CardDescription>
         </CardHeader>
         <CardContent>
-          <MembersTable />
+          {loading ? <p className="py-6 text-sm text-muted-foreground">Loading members…</p> : <MembersTable />}
         </CardContent>
       </Card>
     </div>

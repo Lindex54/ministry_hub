@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
         <ThemeProvider>
           <TooltipProvider>
             <AuthProvider>{children}</AuthProvider>
-            <Toaster richColors closeButton />
+            <Toaster richColors closeButton position="top-right" />
           </TooltipProvider>
         </ThemeProvider>
       </body>

@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { membershipStatuses } from "../data/members.mock";
-import { useMinistries } from "@/features/ministries/MinistriesProvider";
+import { useMemberFormOptions } from "../useMemberFormOptions";
 
 function isUgandanPhone(value) {
   if (!value) return true;
@@ -98,7 +98,7 @@ function FormSection({ icon: Icon, title, description, children }) {
 
 export function MemberForm({ defaultValues, onSubmit, submitLabel = "Save member", onCancel }) {
   const fileInputRef = useRef(null);
-  const { branchNames, ministryNames } = useMinistries();
+  const { branchNames, ministryNames } = useMemberFormOptions();
   const form = useForm({
     resolver: zodResolver(memberSchema),
     defaultValues: { ...emptyMemberValues, ...defaultValues },

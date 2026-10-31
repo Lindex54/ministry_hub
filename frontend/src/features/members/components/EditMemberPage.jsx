@@ -14,22 +14,30 @@ import { MemberForm } from "./MemberForm";
 export function EditMemberPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { getMember, updateMember } = useMembers();
+  const { getMember, updateMember, loading } = useMembers();
   const member = getMember(id);
 
   if (!member) {
     return (
       <div className="mx-auto w-full max-w-3xl space-y-6">
-        <Alert variant="destructive"><UsersRound /><AlertTitle>Member not found</AlertTitle><AlertDescription>This mock member record does not exist or was reset when the page refreshed.</AlertDescription></Alert>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading member…</p>
+        ) : (
+          <Alert variant="destructive"><UsersRound /><AlertTitle>Member not found</AlertTitle><AlertDescription>This member record does not exist.</AlertDescription></Alert>
+        )}
         <Button asChild variant="outline"><Link href="/members"><ArrowLeft />Return to members</Link></Button>
       </div>
     );
   }
 
-  function handleSubmit(values) {
-    updateMember(member.id, values);
-    toast.success(`${values.firstName} ${values.lastName}'s information was updated.`);
-    router.push(`/members/${member.id}`);
+  async function handleSubmit(values) {
+    try {
+      await updateMember(member.id, values);
+      toast.success(`${values.firstName} ${values.lastName}'s information was updated.`);
+      router.push(`/members/${member.id}`);
+    } catch (error) {
+      toast.error(error.message || "Could not save this member's information. Please try again.");
+    }
   }
 
   return (

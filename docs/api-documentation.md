@@ -50,7 +50,39 @@ Model files, by module:
   matching what `frontend/src/features/dashboard/components/DashboardOverview.jsx`
   renders (the frontend's Dashboard mock data was removed; the page now fetches this
   route live). With an empty database every figure is genuinely `0`/empty, not an error.
+- `GET /api/members?branchId=&status=` — list members (camelCase, branch resolved to its
+  name, ministries resolved to a name array). `GET /api/members/:id` — single member,
+  `404` if missing. `POST /api/members` — create (validates with Zod; `branch` is a
+  branch *name*, resolved server-side to `branch_id`; `ministries` is an array of
+  ministry *names*, resolved to `member_ministries` rows, `"None"`/unknown names
+  skipped); the membership number is generated server-side (`MH-{year}-{seq}`), not
+  client-supplied. `PATCH /api/members/:id` — partial update, same name-based
+  `branch`/`ministries` resolution when present. `GET /api/members/next-number` —
+  previews the next membership number for the registration form. Built by
+  `modules/members/{member.service,member.controller,member.validation}.js` on top of
+  `member.model.js`.
+- `GET /api/branches` and `GET /api/ministries` — minimal read-only `{id, name, status}`
+  lists. Added only so Members has real options to select from; full CRUD for these two
+  modules comes when Ministries/Branches itself is wired (it still runs on mock data in
+  the frontend).
 - Any other `/api/*` route currently returns `404 { message }`.
+
+## Members — first fully-wired CRUD module
+
+Members is the first module wired end-to-end: `frontend/src/features/members/MembersProvider.jsx`
+fetches/creates/updates through `/api/members` instead of mock data
+(`members.mock.js`'s `mockMembers` array was removed, keeping only
+`membershipStatuses`/`getMemberDisplayName`/`getMemberInitials`). The registration form
+(`MemberForm.jsx`) now gets its branch/ministry dropdown options from
+`useMemberFormOptions.js` (a small hook fetching `/api/branches` + `/api/ministries`
+directly) instead of `useMinistries()`, because Ministries/Branches itself is still
+mock-only — using the real `MinistriesProvider` would have emptied out those
+still-mock pages. `database/seeders/` is still empty by convention; the real branches
+(4) and ministries (12) that make the Members form usable today were seeded via a
+one-off idempotent script, `backend/src/db/seed-branches-ministries.mjs` (run with
+`node src/db/seed-branches-ministries.mjs` from `backend/`), matching the names already
+used throughout the still-mock frontend so branch/ministry names stay consistent across
+modules until Ministries/Branches is wired for real.
 
 ## Frontend ↔ backend wiring in dev
 
