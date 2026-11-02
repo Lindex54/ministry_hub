@@ -108,6 +108,20 @@ Model files, by module:
   `Partially sent`, or `Failed`; each recipient records its own outcome. SMTP settings
   are documented in `backend/.env.example` and `docs/deployment.md`. SMS and scheduled
   delivery are not implemented.
+- `POST /api/auth/login` — `{identifier, password}` (`identifier` is a `username` or
+  `email`); returns `{user, accessToken, refreshToken}`. `accessToken` is a short-lived
+  (`JWT_EXPIRES_IN`, default `1d`) JWT carrying `{sub, name, role, permissions}`;
+  `refreshToken` is long-lived (`JWT_REFRESH_EXPIRES_IN`, default `30d`). Rejects with
+  `401` on a wrong username/email or password, `403` if the account's `status` isn't
+  `Active`. `POST /api/auth/refresh` — `{refreshToken}` → `{user, accessToken}`. `GET
+  /api/auth/me` — requires `Authorization: Bearer <accessToken>` (via `authenticate`
+  middleware), returns the current user. `POST /api/auth/logout` — stateless `204`; no
+  server-side token blacklist exists yet, so this is just a client-side signal to drop
+  the stored tokens. Built by
+  `modules/auth/{auth.service,auth.controller,auth.validation}.js`, reusing the
+  previously-unwired `utils/jwt.js` + `middleware/auth.middleware.js` scaffolding. Added
+  migration `0022` (`users.username VARCHAR(100) UNIQUE NULL`) since login is by
+  username-or-email, not email alone.
 - Any other `/api/*` route currently returns `404 { message }`.
 
 ## Members — first fully-wired CRUD module
@@ -163,6 +177,23 @@ were added to `backend/src/db/seed-reference-data.mjs`. Assigning a follow-up to
 evangelism contact (`personKey` starting with `evangelism:`) is a deliberate dead end
 right now — the backend rejects it with a clear `400` explaining evangelism isn't in the
 database yet, surfaced to the user as a toast error, rather than silently succeeding.
+
+## Authentication — login session
+
+One shared sign-in for everyone (`/login`); there's no public sign-up — accounts are
+created by an admin directly in the `users` table (or a future Users admin UI). On
+successful login the frontend's `AuthProvider` (`frontend/src/providers/AuthProvider.jsx`)
+stores `accessToken`/`refreshToken` in `localStorage` and `lib/api.js` attaches
+`Authorization: Bearer <accessToken>` to every `api()` call automatically. The
+`(dashboard)` route group is wrapped in `RequireAuth`
+(`frontend/src/providers/RequireAuth.jsx`), which redirects to `/login` if there's no
+authenticated session — this is the only route-level access control today; no routes
+other than `/api/auth/me` actually call `authenticate`/`authorize` yet, so backend
+endpoints are not yet permission-gated. `Header.jsx`'s account menu now shows the real
+signed-in user's name/role and its "Sign out" item calls `logout()`. The first admin
+login (`username: Godwin26`) was seeded via `backend/src/db/seed-admin-user.mjs`
+(idempotent, run with `node src/db/seed-admin-user.mjs` from `backend/`), which also
+creates an "Administrator" role if missing.
 
 ## Frontend ↔ backend wiring in dev
 

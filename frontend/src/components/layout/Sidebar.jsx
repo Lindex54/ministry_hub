@@ -34,7 +34,7 @@ import {
 const navigationGroups = [
   {
     label: "Overview",
-    items: [{ title: "Dashboard", href: "/dashboard", icon: LayoutDashboard }],
+    items: [{ title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard }],
   },
   {
     label: "People",

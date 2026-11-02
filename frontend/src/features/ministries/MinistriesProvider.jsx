@@ -26,12 +26,18 @@ export function MinistriesProvider({ children }) {
     ministriesForBranch: (branchId) => ministries.filter((ministry) => ministry.branchIds.includes(branchId)),
     branchesForMinistry: (ministryId) => branches.filter((branch) => ministries.find((item) => item.id === ministryId)?.branchIds.includes(branch.id)),
     addMinistry: (ministry) => {
+      if (ministries.some((item) => item.name.trim().toLowerCase() === ministry.name.trim().toLowerCase())) {
+        throw new Error("A ministry with this name already exists.");
+      }
       const next = { ...ministry, id: `ministry-${crypto.randomUUID()}` };
       setMinistries((current) => [next, ...current]);
       return next;
     },
     updateMinistry: (id, changes) => setMinistries((current) => current.map((ministry) => ministry.id === id ? { ...ministry, ...changes } : ministry)),
     addBranch: (branch) => {
+      if (branches.some((item) => item.name.trim().toLowerCase() === branch.name.trim().toLowerCase())) {
+        throw new Error("A church branch with this name already exists.");
+      }
       const next = { ...branch, id: `branch-${crypto.randomUUID()}` };
       setBranches((current) => [next, ...current]);
       return next;

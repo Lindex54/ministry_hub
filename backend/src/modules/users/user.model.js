@@ -1,6 +1,6 @@
 import { getPool } from "../../config/database.js";
 
-const COLUMNS = ["name", "email", "password_hash", "role_id", "staff_id", "status", "last_login_at"];
+const COLUMNS = ["name", "username", "email", "password_hash", "role_id", "staff_id", "status", "last_login_at"];
 
 export async function listUsers({ status, roleId } = {}) {
   const clauses = [];
@@ -22,10 +22,16 @@ export async function findUserByEmail(email) {
   return rows[0] ?? null;
 }
 
+export async function findUserByUsername(username) {
+  const [rows] = await getPool().query("SELECT * FROM users WHERE username = ?", [username]);
+  return rows[0] ?? null;
+}
+
 export async function createUser(data) {
-  const values = COLUMNS.map((column) => data[column] ?? null);
+  const columns = COLUMNS.filter((column) => column in data);
+  const values = columns.map((column) => data[column]);
   const [result] = await getPool().query(
-    `INSERT INTO users (${COLUMNS.join(", ")}) VALUES (${COLUMNS.map(() => "?").join(", ")})`,
+    `INSERT INTO users (${columns.join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`,
     values
   );
   return findUserById(result.insertId);

@@ -1,4 +1,5 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { RequireAuth } from "@/providers/RequireAuth";
 import { MembersProvider } from "@/features/members/MembersProvider";
 import { VisitorsProvider } from "@/features/visitors/VisitorsProvider";
 import { OutreachProvider } from "@/features/outreach/OutreachProvider";
@@ -8,18 +9,20 @@ import { MinistriesProvider } from "@/features/ministries/MinistriesProvider";
 
 export default function DashboardRouteLayout({ children }) {
   return (
-    <MinistriesProvider>
-      <VisitorsProvider>
-        <MembersProvider>
-          <AttendanceProvider>
-            <EvangelismProvider>
-              <OutreachProvider>
-                <DashboardLayout>{children}</DashboardLayout>
-              </OutreachProvider>
-            </EvangelismProvider>
-          </AttendanceProvider>
-        </MembersProvider>
-      </VisitorsProvider>
-    </MinistriesProvider>
+    <RequireAuth>
+      <MinistriesProvider>
+        <VisitorsProvider>
+          <MembersProvider>
+            <AttendanceProvider>
+              <EvangelismProvider>
+                <OutreachProvider>
+                  <DashboardLayout>{children}</DashboardLayout>
+                </OutreachProvider>
+              </EvangelismProvider>
+            </AttendanceProvider>
+          </MembersProvider>
+        </VisitorsProvider>
+      </MinistriesProvider>
+    </RequireAuth>
   );
 }

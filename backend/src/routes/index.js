@@ -10,6 +10,7 @@ import { visitorsRouter } from "./visitors.routes.js";
 import { communicationsRouter } from "./communications.routes.js";
 import { staffRouter } from "./staff.routes.js";
 import { followUpTasksRouter } from "./follow-up-tasks.routes.js";
+import { authRouter } from "./auth.routes.js";
 
 export const router = Router();
 
@@ -40,7 +41,8 @@ router.use("/visitors", visitorsRouter);
 router.use("/communications", communicationsRouter);
 router.use("/staff", staffRouter);
 router.use("/follow-up-tasks", followUpTasksRouter);
+router.use("/auth", authRouter);
 
 // Remaining domain modules (attendance, evangelism,
-// services, events, users, auth, ...) mount their routers
+// services, events, users, ...) mount their routers
 // here as each is implemented.

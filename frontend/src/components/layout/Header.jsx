@@ -1,7 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Bell, Church, CircleUserRound, LogOut, Settings, UserRound } from "lucide-react";
+import { useAuth } from "@/providers/AuthProvider";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,6 +26,8 @@ import { ThemeToggle } from "./ThemeToggle";
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const currentPage = pathname.split("/").filter(Boolean).at(-1) ?? "Home";
   const title = currentPage
     .split("-")
@@ -72,18 +75,18 @@ export function Header() {
       <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="gap-2 px-2" aria-label="Open administrator menu">
+          <Button variant="ghost" className="gap-2 px-2" aria-label="Open account menu">
             <CircleUserRound className="size-5" />
-            <span className="hidden text-sm sm:inline">Administrator</span>
+            <span className="hidden text-sm sm:inline">{user?.name ?? "Account"}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel>Admin account</DropdownMenuLabel>
+          <DropdownMenuLabel>{user?.role || "Account"}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem><UserRound />Profile</DropdownMenuItem>
           <DropdownMenuItem><Settings />Settings</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem><LogOut />Sign out</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => { logout(); router.push("/login"); }}><LogOut />Sign out</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
