@@ -8,6 +8,7 @@ import { listChurches, createChurch } from "../modules/churches/church.model.js"
 import { listBranches, createBranch } from "../modules/branches/branch.model.js";
 import { listMinistries, createMinistry } from "../modules/ministries/ministry.model.js";
 import { listServices, createService } from "../modules/services/service.model.js";
+import { listStaff, createStaff } from "../modules/staff/staff.model.js";
 
 const BRANCHES = [
   { name: "Central Campus", location: "Kampala Central", district: "Kampala", address: "Plot 12, Kampala Road, Kampala", phone: "+256 414 123 456", email: "central@ministryhub.org", date_established: "2008-01-10", description: "The founding campus and administrative headquarters of Ministry Hub.", status: "Active" },
@@ -22,6 +23,16 @@ const MINISTRIES = [
 ];
 
 const SERVICES = ["Sunday Main Service", "Wednesday Fellowship", "Friday Prayer Meeting", "Youth Worship Night"];
+
+// Matches the Follow-ups module's static `workers` list in
+// frontend/src/features/outreach/data/outreach.mock.js, so real staff IDs
+// stand in for the same names until that mock export is removed.
+const STAFF = [
+  { name: "Sarah Kato", role: "Pastor", status: "Active" },
+  { name: "Daniel Mugisha", role: "Evangelist", status: "Active" },
+  { name: "Grace Atim", role: "Church worker", status: "Active" },
+  { name: "Peter Lwanga", role: "Church worker", status: "Active" },
+];
 
 async function run() {
   const existingChurches = await listChurches();
@@ -56,6 +67,16 @@ async function run() {
     }
     const created = await createService({ name });
     console.log(`[seed] Created service: ${created.name} (#${created.id})`);
+  }
+
+  const existingStaff = await listStaff();
+  for (const staff of STAFF) {
+    if (existingStaff.some((row) => row.name === staff.name)) {
+      console.log(`[seed] Staff already exists: ${staff.name}`);
+      continue;
+    }
+    const created = await createStaff(staff);
+    console.log(`[seed] Created staff: ${created.name} (#${created.id})`);
   }
 }
 

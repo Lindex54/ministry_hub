@@ -57,12 +57,12 @@ export async function getTaskHistory(taskId) {
   return rows;
 }
 
-export async function addTaskHistoryEntry(taskId, { workerId, status, reached, outcome, notes, anotherFollowUp }) {
+export async function addTaskHistoryEntry(taskId, { workerId, status, reached, outcome, notes, anotherFollowUp, nextDate }) {
   const [result] = await getPool().query(
     `INSERT INTO follow_up_task_history
-      (task_id, worker_id, status, reached, outcome, notes, another_follow_up)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [taskId, workerId ?? null, status, reached ?? null, outcome ?? null, notes ?? null, Boolean(anotherFollowUp)]
+      (task_id, worker_id, status, reached, outcome, notes, another_follow_up, next_date)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [taskId, workerId ?? null, status, reached ?? null, outcome ?? null, notes ?? null, Boolean(anotherFollowUp), nextDate ?? null]
   );
   const [rows] = await getPool().query("SELECT * FROM follow_up_task_history WHERE id = ?", [result.insertId]);
   return rows[0] ?? null;

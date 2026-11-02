@@ -11,12 +11,14 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useOutreach } from "../OutreachProvider";
-import { followUpMethods, taskStatuses, workers } from "../data/outreach.mock";
+import { followUpMethods, taskStatuses } from "../data/outreach.mock";
+import { useFollowUpStaff } from "../useFollowUpStaff";
 import { TaskAssignmentDialog, TaskFeedbackDialog, TaskHistoryDialog } from "./TaskDialogs";
 import { FollowUpStatusBadge } from "@/features/visitors/components/VisitorBadges";
 
 export function FollowUpsPage() {
-  const { tasks, getPerson } = useOutreach();
+  const { tasks, tasksError, getPerson } = useOutreach();
+  const { staff: workers } = useFollowUpStaff();
   const [worker, setWorker] = useState("all"); const [status, setStatus] = useState("all"); const [method, setMethod] = useState("all");
   const filtered = tasks.filter((task) => (worker === "all" || task.workerId === worker) && (status === "all" || task.status === status) && (method === "all" || task.method === method));
   const columns = useMemo(() => [
@@ -29,7 +31,7 @@ export function FollowUpsPage() {
     { id: "actions", enableSorting: false, cell: ({ row }) => <div className="flex gap-1"><TaskFeedbackDialog task={row.original} /><TaskHistoryDialog task={row.original} /></div> },
   ], [getPerson]);
   return <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8"><PageHeader title="Follow-ups" description="Coordinate individual phone calls, physical visits, and pastoral care." actions={<TaskAssignmentDialog workerId={worker === "all" ? undefined : worker} />} />
-    <Alert className="border-primary/20 bg-primary/5"><ClipboardList /><AlertTitle>Mock assignments & worker views</AlertTitle><AlertDescription>Choose a worker below to preview their tasks and submit feedback. Role permissions and permanent storage will be added later. Bulk SMS and email campaigns are managed in <Link href="/communications" className="underline">Communications</Link>.</AlertDescription></Alert>
+    {tasksError ? <Alert variant="destructive"><ClipboardList /><AlertTitle>Could not load follow-ups</AlertTitle><AlertDescription>{tasksError.message ?? "Check that the backend server is running."}</AlertDescription></Alert> : <Alert className="border-primary/20 bg-primary/5"><ClipboardList /><AlertTitle>Worker views</AlertTitle><AlertDescription>Choose a worker below to preview their tasks and submit feedback. Bulk SMS and email campaigns are managed in <Link href="/communications" className="underline">Communications</Link>.</AlertDescription></Alert>}
     <ResponsiveGrid><StatCard title="Total assignments" value={tasks.length} detail="Across all workers" icon={ClipboardList} /><StatCard title="Pending" value={tasks.filter((task) => task.status === "Pending").length} icon={Clock} /><StatCard title="In progress" value={tasks.filter((task) => task.status === "In Progress").length} icon={Phone} /><StatCard title="Completed" value={tasks.filter((task) => task.status === "Completed").length} icon={CheckCircle2} /></ResponsiveGrid>
     <Card><CardHeader className="border-b"><CardTitle>{worker === "all" ? "Follow-up assignments" : `${workers.find((item) => item.id === worker)?.name}'s tasks`}</CardTitle><CardDescription>Assignments stay connected to the original member, visitor, or evangelism contact.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="flex flex-col gap-3 sm:flex-row">
       <Select value={worker} onValueChange={setWorker}><SelectTrigger className="w-full sm:w-60" aria-label="Worker task view"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All workers · Administrator</SelectItem>{workers.map((item) => <SelectItem key={item.id} value={item.id}>{item.name} · {item.role}</SelectItem>)}</SelectContent></Select>

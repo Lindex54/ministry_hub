@@ -65,6 +65,23 @@ Model files, by module:
   lists. Added only so Members has real options to select from; full CRUD for these two
   modules comes when Ministries/Branches itself is wired (it still runs on mock data in
   the frontend).
+- `GET /api/staff` — minimal read-only `{id, name, role, status}` list. Added only so
+  Follow-ups has real worker options to assign; full staff CRUD comes when a
+  Staff/Users module itself is wired.
+- `GET /api/follow-up-tasks?workerId=&status=&method=` — list follow-up tasks (camelCase,
+  each with a nested `history` array). `GET /api/follow-up-tasks/:id` — single task, `404`
+  if missing. `POST /api/follow-up-tasks` — create (`{personKey, workerId, method,
+  scheduledDate, priority?, reason}`); `personKey` is `member:<id>`, `visitor:<id>`, or
+  `evangelism:<id>` — the referenced member/visitor must exist in the database or the
+  request is rejected with `400`; `evangelism:*` keys are always rejected with a clear
+  `400` message because evangelism contacts aren't stored in the database yet (they're
+  still mock-only); `workerId` is resolved against the real `staff` table. Creating a task
+  also writes an initial "Assignment created" history row. `POST
+  /api/follow-up-tasks/:id/feedback` — appends a history row (`{reached, status, outcome,
+  notes?, anotherFollowUp?, nextDate?}`, `nextDate` persisted via migration `0020`) and
+  updates the task's `status`. Built by
+  `modules/follow-ups/{follow-up-task.service,follow-up-task.controller,follow-up-task.validation}.js`
+  on top of the pre-existing `follow-up-task.model.js`.
 - `GET /api/visitors` — list (camelCase, each with a `visitHistory` array joined from
   `visitor_visits` + `services`). `GET /api/visitors/:id` — single visitor, `404` if
   missing. `POST /api/visitors` — create; if the submitted `phone` (normalized the same
@@ -128,6 +145,24 @@ client-side via `exceljs` (dynamically imported in `VisitorsOverview.jsx`'s
 (SheetJS) was tried first but has an unpatched high-severity advisory on the npm
 registry (fixAvailable: false) — `exceljs` has none, so that's the standing choice for
 any future spreadsheet export/import work in this project.
+
+## Follow-ups — third fully-wired CRUD module
+
+`frontend/src/features/outreach/OutreachProvider.jsx`'s `tasks` state now fetches/
+creates/updates through `/api/follow-up-tasks` instead of its old hard-coded
+`initialTasks()` (which synthesized tasks from `mockVisitors.followUps` plus two
+literal mock tasks). `people`, `campaigns`, and `templates` are untouched — still mock
+for evangelism contacts, real for members/visitors, same as before. The worker dropdown
+in `TaskDialogs.jsx` and `FollowUpsPage.jsx` now comes from `useFollowUpStaff.js` (a
+scoped hook fetching `/api/staff` directly), not the static `workers` export from
+`outreach.mock.js` — that export is left untouched because `evangelism.mock.js`,
+`ministries/leader-utils.js`, `EvangelismRecordsTable.jsx`, `CampaignComposer.jsx`, and
+`CommunicationsPage.jsx` all still depend on it directly. The 4 real `staff` rows
+(Sarah Kato, Daniel Mugisha, Grace Atim, Peter Lwanga) matching those mock worker names
+were added to `backend/src/db/seed-reference-data.mjs`. Assigning a follow-up to an
+evangelism contact (`personKey` starting with `evangelism:`) is a deliberate dead end
+right now — the backend rejects it with a clear `400` explaining evangelism isn't in the
+database yet, surfaced to the user as a toast error, rather than silently succeeding.
 
 ## Frontend ↔ backend wiring in dev
 

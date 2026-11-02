@@ -4,27 +4,12 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { useMembers } from "@/features/members/MembersProvider";
 import { useVisitors } from "@/features/visitors/VisitorsProvider";
-import { mockVisitors } from "@/features/visitors/data/visitors.mock";
-import { evangelismContacts, templates, workers } from "./data/outreach.mock";
+import { evangelismContacts, templates } from "./data/outreach.mock";
 import { useAttendance } from "@/features/attendance/AttendanceProvider";
 import { useEvangelism } from "@/features/evangelism/EvangelismProvider";
 import { getRecordName } from "@/features/evangelism/data/evangelism.mock";
 
 const OutreachContext = createContext(null);
-
-function initialTasks() {
-  const visitorTasks = mockVisitors.flatMap((visitor) => visitor.followUps
-    .filter((followUp) => followUp.contactMethod === "Phone call")
-    .map((followUp) => ({
-      id: followUp.id, personKey: `visitor:${visitor.id}`, workerId: workers.find((worker) => worker.name === followUp.assignedTo)?.id ?? workers[0].id,
-      method: "Phone Call", scheduledDate: followUp.date, priority: "Normal", reason: "Visitor welcome", status: followUp.status,
-      history: [{ id: `${followUp.id}-initial`, date: `${followUp.date}T10:00:00+03:00`, workerId: workers.find((worker) => worker.name === followUp.assignedTo)?.id ?? workers[0].id, status: followUp.status, reached: followUp.status === "Completed" ? "Yes" : "Not recorded", outcome: followUp.outcome || "Assignment created", notes: "", anotherFollowUp: false }],
-    })));
-  return [...visitorTasks,
-    { id: "task-member-1", personKey: "member:member-004", workerId: workers[0].id, method: "Physical Visit", scheduledDate: "2026-10-28", priority: "High", reason: "Pastoral care visit", status: "Pending", history: [] },
-    { id: "task-evangelism-1", personKey: "evangelism:contact-001", workerId: workers[1].id, method: "Phone Call", scheduledDate: "2026-10-29", priority: "Normal", reason: "Outreach introduction", status: "Pending", history: [] },
-  ];
-}
 
 export function OutreachProvider({ children }) {
   const { members } = useMembers();
@@ -32,7 +17,9 @@ export function OutreachProvider({ children }) {
   const { getVisitorWithAttendance, getPersonAttendance } = useAttendance();
   const { records: evangelismRecords } = useEvangelism();
   const visitors = sourceVisitors.map(getVisitorWithAttendance);
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const [tasksError, setTasksError] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
   const [campaignsLoading, setCampaignsLoading] = useState(true);
   const [campaignsError, setCampaignsError] = useState(null);
@@ -46,6 +33,18 @@ export function OutreachProvider({ children }) {
       .finally(() => { if (!cancelled) setCampaignsLoading(false); });
     return () => { cancelled = true; };
   }, []);
+
+  function reloadTasks() {
+    let cancelled = false;
+    setTasksLoading(true);
+    api("/follow-up-tasks")
+      .then((data) => { if (!cancelled) { setTasks(data); setTasksError(null); } })
+      .catch((requestError) => { if (!cancelled) setTasksError(requestError); })
+      .finally(() => { if (!cancelled) setTasksLoading(false); });
+    return () => { cancelled = true; };
+  }
+
+  useEffect(() => reloadTasks(), []);
   const people = useMemo(() => [
     ...members.map((member) => {
       const prefs = { consent: member.consentToContact, sms: member.smsOptIn, email: member.emailOptIn };
@@ -64,15 +63,19 @@ export function OutreachProvider({ children }) {
   }
 
   const value = {
-    people, tasks, campaigns, campaignsLoading, campaignsError, getPerson, templates: savedTemplates,
+    people, tasks, tasksLoading, tasksError, campaigns, campaignsLoading, campaignsError, getPerson, templates: savedTemplates,
     addTemplate: (template) => setSavedTemplates((current) => [...current, { ...template, id: crypto.randomUUID() }]),
     getPersonTasks: (key) => tasks.filter((task) => task.personKey === key || getPerson(task.personKey)?.key === getPerson(key)?.key),
-    addTask: (values) => {
-      const task = { ...values, id: crypto.randomUUID(), history: [{ id: crypto.randomUUID(), date: new Date().toISOString(), workerId: values.workerId, status: "Pending", reached: "Not recorded", outcome: "Assignment created", notes: "", anotherFollowUp: false }] };
+    addTask: async (values) => {
+      const task = await api.post("/follow-up-tasks", values);
       setTasks((current) => [task, ...current]);
       return task;
     },
-    submitFeedback: (id, feedback) => setTasks((current) => current.map((task) => task.id === id ? { ...task, status: feedback.status, history: [...task.history, { ...feedback, id: crypto.randomUUID(), workerId: task.workerId, date: new Date().toISOString() }] } : task)),
+    submitFeedback: async (id, feedback) => {
+      const task = await api.post(`/follow-up-tasks/${id}/feedback`, feedback);
+      setTasks((current) => current.map((item) => item.id === id ? task : item));
+      return task;
+    },
     addCampaign: async (campaign) => {
       const created = await api.post("/communications/campaigns/email/send", campaign);
       setCampaigns((current) => [created, ...current]);
