@@ -54,3 +54,36 @@ export async function getCurrentUser(userId) {
   if (!row) throw AppError.notFound("User not found.");
   return toApiUser(row);
 }
+
+export async function updateOwnProfile(userId, values) {
+  const existing = await findUserById(userId);
+  if (!existing) throw AppError.notFound("User not found.");
+
+  if (values.username && values.username !== existing.username) {
+    const other = await findUserByUsername(values.username);
+    if (other && other.id !== existing.id) throw AppError.badRequest("That username is already taken.");
+  }
+  if (values.email && values.email !== existing.email) {
+    const other = await findUserByEmail(values.email);
+    if (other && other.id !== existing.id) throw AppError.badRequest("That email is already in use.");
+  }
+
+  const data = {};
+  if (values.name !== undefined) data.name = values.name;
+  if (values.username !== undefined) data.username = values.username;
+  if (values.email !== undefined) data.email = values.email;
+
+  const updated = await updateUser(userId, data);
+  return toApiUser(updated);
+}
+
+export async function changeOwnPassword(userId, { currentPassword, newPassword }) {
+  const existing = await findUserById(userId);
+  if (!existing) throw AppError.notFound("User not found.");
+
+  const currentMatches = await bcrypt.compare(currentPassword, existing.password_hash);
+  if (!currentMatches) throw AppError.unauthorized("Current password is incorrect.");
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await updateUser(userId, { password_hash: passwordHash });
+}

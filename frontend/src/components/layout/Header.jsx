@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Church, CircleUserRound, LogOut, Settings, UserRound } from "lucide-react";
+import { Bell, Church, CircleUserRound, LogOut, UserRound } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
 import {
   Breadcrumb,
@@ -83,8 +84,7 @@ export function Header() {
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel>{user?.role || "Account"}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem><UserRound />Profile</DropdownMenuItem>
-          <DropdownMenuItem><Settings />Settings</DropdownMenuItem>
+          <DropdownMenuItem asChild><Link href="/profile"><UserRound />Profile</Link></DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => { logout(); router.push("/login"); }}><LogOut />Sign out</DropdownMenuItem>
         </DropdownMenuContent>

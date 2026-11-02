@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Church, Loader2 } from "lucide-react";
+import { Church, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +23,7 @@ const loginSchema = z.object({
 
 export function LoginForm() {
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
   const form = useForm({
@@ -74,14 +75,26 @@ export function LoginForm() {
                   Forgot password?
                 </Link>
               </div>
-              <Input
-                id="login-password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                aria-invalid={!!form.formState.errors.password}
-                {...form.register("password")}
-              />
+              <div className="relative">
+                <Input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  aria-invalid={!!form.formState.errors.password}
+                  className="pr-9"
+                  {...form.register("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
               {form.formState.errors.password ? <FieldError errors={[form.formState.errors.password]} /> : null}
             </Field>
 

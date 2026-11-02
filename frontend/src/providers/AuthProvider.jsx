@@ -37,8 +37,18 @@ export function AuthProvider({ children }) {
     api.post("/auth/logout", {}).catch(() => {});
   }
 
+  async function updateProfile(values) {
+    const updated = await api.patch("/auth/me", values);
+    setUser(updated);
+    return updated;
+  }
+
+  async function changePassword(values) {
+    await api.post("/auth/change-password", values);
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, isAuthenticated: Boolean(user), login, logout }}>
+    <AuthContext.Provider value={{ user, loading, isAuthenticated: Boolean(user), login, logout, updateProfile, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

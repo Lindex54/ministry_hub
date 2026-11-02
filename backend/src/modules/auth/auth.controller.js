@@ -1,5 +1,7 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
-import { loginWithPassword, refreshSession, getCurrentUser } from "./auth.service.js";
+import {
+  loginWithPassword, refreshSession, getCurrentUser, updateOwnProfile, changeOwnPassword,
+} from "./auth.service.js";
 
 export const login = asyncHandler(async (request, response) => {
   const result = await loginWithPassword(request.body);
@@ -13,6 +15,15 @@ export const refresh = asyncHandler(async (request, response) => {
 
 export const me = asyncHandler(async (request, response) => {
   response.json(await getCurrentUser(request.user.sub));
+});
+
+export const updateMe = asyncHandler(async (request, response) => {
+  response.json(await updateOwnProfile(request.user.sub, request.body));
+});
+
+export const changePassword = asyncHandler(async (request, response) => {
+  await changeOwnPassword(request.user.sub, request.body);
+  response.status(204).end();
 });
 
 // Tokens aren't tracked server-side (no blacklist table yet), so logging out
