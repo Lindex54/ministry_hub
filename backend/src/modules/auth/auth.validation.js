@@ -16,6 +16,11 @@ export const updateProfileBody = z.object({
   name: z.string().trim().min(1).optional(),
   username: usernameSchema.optional(),
   email: z.string().trim().email().optional(),
+  districtId: z.union([z.string(), z.number()]).optional(),
+  countyId: z.union([z.string(), z.number()]).optional(),
+  subCountyId: z.union([z.string(), z.number()]).optional(),
+  parishId: z.union([z.string(), z.number()]).optional(),
+  villageId: z.union([z.string(), z.number()]).optional(),
 });
 
 export const changePasswordBody = z.object({

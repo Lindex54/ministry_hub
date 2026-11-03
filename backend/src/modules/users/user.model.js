@@ -1,6 +1,9 @@
 import { getPool } from "../../config/database.js";
 
-const COLUMNS = ["name", "username", "email", "password_hash", "role_id", "staff_id", "status", "last_login_at"];
+const COLUMNS = [
+  "name", "username", "email", "password_hash", "role_id", "staff_id", "status", "last_login_at",
+  "district_id", "county_id", "sub_county_id", "parish_id", "village_id",
+];
 
 export async function listUsers({ status, roleId } = {}) {
   const clauses = [];

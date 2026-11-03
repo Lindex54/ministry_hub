@@ -12,12 +12,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { UgandaLocationFields } from "@/components/shared/UgandaLocationFields";
 import { useAuth } from "@/providers/AuthProvider";
 
 const profileSchema = z.object({
   name: z.string().trim().min(1, "Name is required."),
   username: z.string().trim().min(3, "Username must be at least 3 characters."),
   email: z.string().trim().min(1, "Email is required.").email("Enter a valid email address."),
+  districtId: z.string(),
+  countyId: z.string(),
+  subCountyId: z.string(),
+  parishId: z.string(),
+  villageId: z.string(),
 });
 
 const passwordSchema = z.object({
@@ -37,7 +43,16 @@ export function ProfilePage() {
 
   const profileForm = useForm({
     resolver: zodResolver(profileSchema),
-    defaultValues: { name: user?.name ?? "", username: user?.username ?? "", email: user?.email ?? "" },
+    defaultValues: {
+      name: user?.name ?? "",
+      username: user?.username ?? "",
+      email: user?.email ?? "",
+      districtId: user?.location?.districtId ?? "",
+      countyId: user?.location?.countyId ?? "",
+      subCountyId: user?.location?.subCountyId ?? "",
+      parishId: user?.location?.parishId ?? "",
+      villageId: user?.location?.villageId ?? "",
+    },
   });
   const passwordForm = useForm({
     resolver: zodResolver(passwordSchema),
@@ -102,6 +117,9 @@ export function ProfilePage() {
               <Input id="profile-email" type="email" {...profileForm.register("email")} />
               {profileForm.formState.errors.email ? <FieldError errors={[profileForm.formState.errors.email]} /> : null}
             </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <UgandaLocationFields control={profileForm.control} watch={profileForm.watch} setValue={profileForm.setValue} />
+            </div>
             <div>
               <Button type="submit" disabled={savingProfile}>
                 {savingProfile ? <Loader2 className="animate-spin" /> : null}

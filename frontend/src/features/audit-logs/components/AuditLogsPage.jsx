@@ -5,7 +5,7 @@ import { Activity, CheckCircle2, ChevronLeft, ChevronRight, Search, ShieldAlert,
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -89,7 +89,6 @@ export function AuditLogsPage() {
     <Card>
       <CardHeader className="border-b">
         <CardTitle>Audit trail</CardTitle>
-        <CardDescription>Logs are read-only and displayed 10 records per page, newest first.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid gap-3 md:grid-cols-[minmax(16rem,1fr)_12rem_12rem]">

@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { UgandaLocationFields } from "@/components/shared/UgandaLocationFields";
 import { membershipStatuses } from "../data/members.mock";
 import { useMemberFormOptions } from "../useMemberFormOptions";
@@ -170,15 +169,8 @@ export function MemberForm({ defaultValues, onSubmit, submitLabel = "Save member
       <FormSection icon={ContactRound} title="Contact Information" description="How the church can reach and locate the member.">
         <TextField control={form.control} name="primaryPhone" label="Primary phone number" required type="tel" placeholder="0772 123 456" />
         <TextField control={form.control} name="alternativePhone" label="Alternative phone" type="tel" placeholder="+256 701 234 567" />
-        <TextField control={form.control} name="email" label="Email address" type="email" placeholder="Optional email address" description="Optional—an email address is not required to register a member." />
+        <TextField control={form.control} name="email" label="Email address" type="email" placeholder="e.g. sarah@example.com" />
         <TextField control={form.control} name="district" label="District" placeholder="e.g. Kampala" />
-        <Controller name="address" control={form.control} render={({ field, fieldState }) => (
-          <Field className="md:col-span-2" data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="member-address">Address</FieldLabel>
-            <Textarea {...field} id="member-address" placeholder="Village, parish, town, or other helpful location details" aria-invalid={fieldState.invalid} />
-            {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-          </Field>
-        )} />
         <UgandaLocationFields control={form.control} watch={form.watch} setValue={form.setValue} />
       </FormSection>
 

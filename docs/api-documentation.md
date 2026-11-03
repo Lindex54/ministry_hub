@@ -207,11 +207,18 @@ creates an "Administrator" role if missing.
 
 ## Uganda location hierarchy (district -> village)
 
-Members and Visitors can optionally be tied to Uganda's real administrative hierarchy —
-district -> county -> sub-county -> parish -> village — alongside their existing
-free-text `district`/`address` (members) and `district_address` (visitors) fields,
-which are untouched. None of the five levels are required; picking a level just narrows
-the next dropdown and clears any deeper selections already made.
+Members, Visitors, and now every logged-in user's own profile (`users` table, migration
+`0025`) can optionally be tied to Uganda's real administrative hierarchy — district ->
+county -> sub-county -> parish -> village — alongside their existing free-text
+`district`/`address` (members) and `district_address` (visitors) fields, which are
+untouched. None of the five levels are required; picking a level just narrows the next
+dropdown and clears any deeper selections already made. For users, `PATCH /api/auth/me`
+accepts the same `districtId`/`countyId`/`subCountyId`/`parishId`/`villageId` fields,
+resolved to names via `modules/auth/auth.service.js`'s `getUserLocation()` and returned
+as a nested `location` object on every `/api/auth/*` user response, edited from the
+"Location" section of `frontend/src/features/auth/components/ProfilePage.jsx`. The
+Member registration form's old free-text "Address" textarea was removed (now redundant
+with the real location hierarchy); the free-text "District" field was kept.
 
 The reference data (146 districts, 349 counties, 2,191 sub-counties, 10,716 parishes,
 71,186 villages) is the real dataset from the author's own UPAMS project (a Laravel app
