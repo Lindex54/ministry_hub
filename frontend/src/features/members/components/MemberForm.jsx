@@ -12,6 +12,7 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { UgandaLocationFields } from "@/components/shared/UgandaLocationFields";
 import { membershipStatuses } from "../data/members.mock";
 import { useMemberFormOptions } from "../useMemberFormOptions";
 
@@ -37,6 +38,11 @@ export const memberSchema = z.object({
   email: z.string().trim().refine((value) => !value || z.email().safeParse(value).success, "Enter a valid email address."),
   district: z.string().trim(),
   address: z.string().trim(),
+  districtId: z.string(),
+  countyId: z.string(),
+  subCountyId: z.string(),
+  parishId: z.string(),
+  villageId: z.string(),
   branch: z.string().min(1, "Church branch is required."),
   dateJoined: z.string(),
   status: z.string(),
@@ -60,6 +66,11 @@ export const emptyMemberValues = {
   email: "",
   district: "",
   address: "",
+  districtId: "",
+  countyId: "",
+  subCountyId: "",
+  parishId: "",
+  villageId: "",
   branch: "",
   dateJoined: "",
   status: "Active",
@@ -168,6 +179,7 @@ export function MemberForm({ defaultValues, onSubmit, submitLabel = "Save member
             {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
           </Field>
         )} />
+        <UgandaLocationFields control={form.control} watch={form.watch} setValue={form.setValue} />
       </FormSection>
 
       <FormSection icon={Church} title="Church Information" description="Membership details and ministry involvement.">

@@ -2,6 +2,7 @@ import { getPool } from "../../config/database.js";
 
 const COLUMNS = [
   "first_name", "last_name", "phone", "email", "gender", "district_address",
+  "district_id", "county_id", "sub_county_id", "parish_id", "village_id",
   "invited_by", "prayer_request", "permission_to_contact", "branch_id", "converted_member_id",
 ];
 

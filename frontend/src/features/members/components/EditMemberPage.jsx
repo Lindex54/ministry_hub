@@ -48,7 +48,14 @@ export function EditMemberPage() {
         actions={<Button variant="outline" onClick={() => router.push(`/members/${member.id}`)}><ArrowLeft />Profile</Button>}
       />
       <MemberForm
-        defaultValues={member}
+        defaultValues={{
+          ...member,
+          districtId: member.location?.districtId ?? "",
+          countyId: member.location?.countyId ?? "",
+          subCountyId: member.location?.subCountyId ?? "",
+          parishId: member.location?.parishId ?? "",
+          villageId: member.location?.villageId ?? "",
+        }}
         onSubmit={handleSubmit}
         submitLabel="Save changes"
         onCancel={() => router.push(`/members/${member.id}`)}

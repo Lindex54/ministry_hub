@@ -11,7 +11,8 @@
     "dev:backend": "npm run dev --workspace backend",
     "build": "npm run build --workspace frontend",
     "start": "npm run start --workspace backend",
-    "test": "npm run test --workspace backend"
+    "test": "npm run test --workspace backend",
+    "db:seed": "npm run db:seed --workspace backend"
   },
   "dependencies": {
     "next": "^16.0.0"

@@ -5,7 +5,7 @@ import { AppError } from "../utils/AppError.js";
 // authorize()'s permission-set check.
 export function requireAdmin(request, _response, next) {
   if (request.user?.role !== "Administrator") {
-    return next(AppError.forbidden("Only administrators can manage user accounts."));
+    return next(AppError.forbidden("Only administrators can access this resource."));
   }
   next();
 }

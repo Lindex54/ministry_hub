@@ -122,6 +122,16 @@ Model files, by module:
   previously-unwired `utils/jwt.js` + `middleware/auth.middleware.js` scaffolding. Added
   migration `0022` (`users.username VARCHAR(100) UNIQUE NULL`) since login is by
   username-or-email, not email alone.
+- `GET /api/locations/districts` — all active Uganda districts, `{id, name, code}`.
+  `GET /api/locations/districts/:districtId/counties`,
+  `GET /api/locations/counties/:countyId/sub-counties`,
+  `GET /api/locations/sub-counties/:subCountyId/parishes`,
+  `GET /api/locations/parishes/:parishId/villages` — each returns the active children of
+  the given parent, same shape. Built by `modules/locations/location.controller.js`
+  directly against the `districts`/`counties`/`sub_counties`/`parishes`/`villages`
+  tables (migration `0023`) — read-only, no service/validation layer needed since
+  there's no write path. See the "Uganda location hierarchy" section below for where
+  the data came from and how it's used.
 - Any other `/api/*` route currently returns `404 { message }`.
 
 ## Members — first fully-wired CRUD module
@@ -194,6 +204,39 @@ signed-in user's name/role and its "Sign out" item calls `logout()`. The first a
 login (`username: Godwin26`) was seeded via `backend/src/db/seed-admin-user.mjs`
 (idempotent, run with `node src/db/seed-admin-user.mjs` from `backend/`), which also
 creates an "Administrator" role if missing.
+
+## Uganda location hierarchy (district -> village)
+
+Members and Visitors can optionally be tied to Uganda's real administrative hierarchy —
+district -> county -> sub-county -> parish -> village — alongside their existing
+free-text `district`/`address` (members) and `district_address` (visitors) fields,
+which are untouched. None of the five levels are required; picking a level just narrows
+the next dropdown and clears any deeper selections already made.
+
+The reference data (146 districts, 349 counties, 2,191 sub-counties, 10,716 parishes,
+71,186 villages) is the real dataset from the author's own UPAMS project (a Laravel app
+at `C:\Projects\upams`), imported once via `backend/src/db/import-uganda-locations.mjs`
+(idempotent — skips if `districts` already has rows) from a mysqldump SQL file
+(`upams_db.sql`). The importer has its own quote-aware SQL-tuple parser since the dump
+has at least one value containing a literal `(`/`)` that breaks naive paren-matching
+(a parish named `Karwesanga(Rugaaga)`).
+
+- `database/migrations/0023_create_uganda_location_tables.sql` — the five lookup
+  tables (`is_active` boolean, not the `status` ENUM pattern used elsewhere, since this
+  is a near-exact port of the proven UPAMS schema).
+- `database/migrations/0024_add_location_fields_to_members_and_visitors.sql` — adds
+  nullable `district_id`/`county_id`/`sub_county_id`/`parish_id`/`village_id` FK columns
+  to both `members` and `visitors`.
+- `modules/members/member.service.js` and `modules/visitors/visitor.service.js` LEFT
+  JOIN the five tables to resolve names alongside IDs, returned as a nested `location`
+  object (`{districtId, districtName, countyId, countyName, ...}`) on every member/
+  visitor API response.
+- `frontend/src/components/shared/UgandaLocationFields.jsx` — the shared cascading
+  5-select component (fetches `/api/locations/...` as each parent is chosen, via plain
+  `useEffect` + `useState`, not a provider, since this is per-form fetch-as-you-go data).
+  Used by both `MemberForm.jsx` and `VisitorForm.jsx`. Edit pages
+  (`EditMemberPage.jsx`/`EditVisitorPage.jsx`) flatten the response's nested `location`
+  object back into the form's flat `districtId`/etc. fields for prefill.
 
 ## Frontend ↔ backend wiring in dev
 

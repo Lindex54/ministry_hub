@@ -44,6 +44,11 @@ export function NewMemberPage() {
     email: visitor.email,
     district: visitor.districtAddress.split(",").at(-1)?.trim() ?? "",
     address: visitor.districtAddress,
+    districtId: visitor.location?.districtId ?? "",
+    countyId: visitor.location?.countyId ?? "",
+    subCountyId: visitor.location?.subCountyId ?? "",
+    parishId: visitor.location?.parishId ?? "",
+    villageId: visitor.location?.villageId ?? "",
     dateJoined: format(new Date(), "yyyy-MM-dd"),
   } : evangelismRecord ? {
     ...emptyMemberValues,

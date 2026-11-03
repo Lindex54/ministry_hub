@@ -3,7 +3,8 @@ import { getPool } from "../../config/database.js";
 const COLUMNS = [
   "membership_number", "first_name", "last_name", "preferred_name", "gender",
   "date_of_birth", "profile_photo", "primary_phone", "alternative_phone", "email",
-  "district", "address", "branch_id", "date_joined", "status", "emergency_name",
+  "district", "address", "district_id", "county_id", "sub_county_id", "parish_id",
+  "village_id", "branch_id", "date_joined", "status", "emergency_name",
   "emergency_relationship", "emergency_phone", "consent_to_contact", "sms_opt_in",
   "email_opt_in",
 ];

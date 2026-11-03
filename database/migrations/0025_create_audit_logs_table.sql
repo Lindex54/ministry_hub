@@ -1,0 +1,22 @@
+CREATE TABLE audit_logs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NULL,
+  actor_name VARCHAR(255) NULL,
+  actor_username VARCHAR(100) NULL,
+  actor_role VARCHAR(100) NULL,
+  action VARCHAR(50) NOT NULL,
+  method VARCHAR(10) NOT NULL,
+  resource VARCHAR(100) NOT NULL,
+  resource_id VARCHAR(100) NULL,
+  path VARCHAR(500) NOT NULL,
+  status_code SMALLINT UNSIGNED NOT NULL,
+  outcome ENUM('Success', 'Failed') NOT NULL,
+  ip_address VARCHAR(45) NULL,
+  user_agent VARCHAR(500) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_audit_logs_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL,
+  INDEX idx_audit_logs_created_at (created_at),
+  INDEX idx_audit_logs_user_id (user_id),
+  INDEX idx_audit_logs_action (action),
+  INDEX idx_audit_logs_outcome (outcome)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

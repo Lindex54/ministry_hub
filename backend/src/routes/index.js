@@ -13,6 +13,10 @@ import { followUpTasksRouter } from "./follow-up-tasks.routes.js";
 import { authRouter } from "./auth.routes.js";
 import { usersRouter } from "./users.routes.js";
 import { rolesRouter } from "./roles.routes.js";
+import { locationsRouter } from "./locations.routes.js";
+import { auditLogsRouter } from "./audit-logs.routes.js";
+import { auditRequest } from "../middleware/audit.middleware.js";
+import { identifyUser } from "../middleware/auth.middleware.js";
 
 export const router = Router();
 
@@ -35,6 +39,8 @@ router.get(
   })
 );
 
+router.use(identifyUser, auditRequest);
+
 router.use("/dashboard", dashboardRouter);
 router.use("/members", membersRouter);
 router.use("/branches", branchesRouter);
@@ -46,6 +52,8 @@ router.use("/follow-up-tasks", followUpTasksRouter);
 router.use("/auth", authRouter);
 router.use("/users", usersRouter);
 router.use("/roles", rolesRouter);
+router.use("/locations", locationsRouter);
+router.use("/audit-logs", auditLogsRouter);
 
 // Remaining domain modules (attendance, evangelism,
 // services, events, ...) mount their routers

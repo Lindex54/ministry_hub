@@ -5,6 +5,7 @@ import {
 
 export const login = asyncHandler(async (request, response) => {
   const result = await loginWithPassword(request.body);
+  response.locals.auditUser = result.user;
   response.json(result);
 });
 

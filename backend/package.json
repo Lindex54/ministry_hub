@@ -10,7 +10,10 @@
     "email:test-connection": "node src/services/check-email-connection.js",
     "db:test": "node src/db/check-connection.js",
     "db:migrate": "node src/db/migrate.js up",
-    "db:migrate:status": "node src/db/migrate.js status"
+    "db:migrate:status": "node src/db/migrate.js status",
+    "db:seed:reference": "node src/db/seed-reference-data.mjs",
+    "db:seed:sample": "node src/db/seed-sample-data.mjs",
+    "db:seed": "npm run db:seed:reference && npm run db:seed:sample"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

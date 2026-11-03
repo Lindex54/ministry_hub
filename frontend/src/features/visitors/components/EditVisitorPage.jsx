@@ -47,7 +47,19 @@ export function EditVisitorPage() {
         description="Update personal details, communication consent, and sensitive pastoral information."
         actions={<Button variant="outline" onClick={() => router.push(`/visitors/${visitor.id}`)}><ArrowLeft />Profile</Button>}
       />
-      <VisitorForm defaultValues={visitor} onSubmit={handleSubmit} onCancel={() => router.push(`/visitors/${visitor.id}`)} submitLabel="Save changes" />
+      <VisitorForm
+        defaultValues={{
+          ...visitor,
+          districtId: visitor.location?.districtId ?? "",
+          countyId: visitor.location?.countyId ?? "",
+          subCountyId: visitor.location?.subCountyId ?? "",
+          parishId: visitor.location?.parishId ?? "",
+          villageId: visitor.location?.villageId ?? "",
+        }}
+        onSubmit={handleSubmit}
+        onCancel={() => router.push(`/visitors/${visitor.id}`)}
+        submitLabel="Save changes"
+      />
     </div>
   );
 }

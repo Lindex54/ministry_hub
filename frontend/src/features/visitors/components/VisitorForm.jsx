@@ -12,6 +12,7 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { UgandaLocationFields } from "@/components/shared/UgandaLocationFields";
 import { serviceOptions } from "../data/visitors.mock";
 
 function isUgandanPhone(value) {
@@ -26,6 +27,11 @@ const visitorDetailsSchema = z.object({
   email: z.string().trim().refine((value) => !value || z.email().safeParse(value).success, "Enter a valid email address."),
   gender: z.string(),
   districtAddress: z.string().trim(),
+  districtId: z.string(),
+  countyId: z.string(),
+  subCountyId: z.string(),
+  parishId: z.string(),
+  villageId: z.string(),
   invitedBy: z.string().trim(),
   prayerRequest: z.string().trim(),
   permissionToContact: z.boolean(),
@@ -37,7 +43,9 @@ const registrationSchema = visitorDetailsSchema.extend({
 });
 
 export const emptyVisitorValues = {
-  firstName: "", lastName: "", phone: "", email: "", gender: "", districtAddress: "", invitedBy: "", prayerRequest: "", permissionToContact: false, dateOfVisit: "", serviceAttended: "",
+  firstName: "", lastName: "", phone: "", email: "", gender: "", districtAddress: "",
+  districtId: "", countyId: "", subCountyId: "", parishId: "", villageId: "",
+  invitedBy: "", prayerRequest: "", permissionToContact: false, dateOfVisit: "", serviceAttended: "",
 };
 
 function TextField({ control, name, label, required, type = "text", placeholder, description, disabled }) {
@@ -64,6 +72,7 @@ export function VisitorForm({ defaultValues, onSubmit, onCancel, registration = 
         <TextField control={form.control} name="phone" label="Phone number" required type="tel" placeholder="0772 123 456" />
         <TextField control={form.control} name="email" label="Email address" type="email" placeholder="Optional email address" description="Email is not required to register a visitor." />
         <Controller name="districtAddress" control={form.control} render={({ field, fieldState }) => <Field className="md:col-span-2" data-invalid={fieldState.invalid}><FieldLabel htmlFor="visitor-address">District / address</FieldLabel><Textarea {...field} id="visitor-address" placeholder="District, town, village, or other helpful location details" aria-invalid={fieldState.invalid} />{fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}</Field>} />
+        <UgandaLocationFields control={form.control} watch={form.watch} setValue={form.setValue} />
       </FormSection>
       {registration ? <FormSection icon={CalendarDays} title="Visit Information" description="Details of the service or gathering attended.">
         <TextField control={form.control} name="dateOfVisit" label="Date of visit" required type="date" disabled={Boolean(visitContext)} />

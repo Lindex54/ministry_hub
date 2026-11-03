@@ -5,10 +5,35 @@ import {
 
 const COLUMN_MAP = {
   firstName: "first_name", lastName: "last_name", phone: "phone", email: "email",
-  gender: "gender", districtAddress: "district_address", invitedBy: "invited_by",
-  prayerRequest: "prayer_request", permissionToContact: "permission_to_contact",
+  gender: "gender", districtAddress: "district_address",
+  districtId: "district_id", countyId: "county_id", subCountyId: "sub_county_id",
+  parishId: "parish_id", villageId: "village_id",
+  invitedBy: "invited_by", prayerRequest: "prayer_request", permissionToContact: "permission_to_contact",
   convertedMemberId: "converted_member_id",
 };
+
+// Uganda administrative location hierarchy (district -> village) is optional
+// on every visitor — these joins just resolve the selected IDs to names.
+const LOCATION_JOINS = `
+  LEFT JOIN districts loc_d ON loc_d.id = v.district_id
+  LEFT JOIN counties loc_c ON loc_c.id = v.county_id
+  LEFT JOIN sub_counties loc_sc ON loc_sc.id = v.sub_county_id
+  LEFT JOIN parishes loc_p ON loc_p.id = v.parish_id
+  LEFT JOIN villages loc_v ON loc_v.id = v.village_id
+`;
+const LOCATION_JOIN_COLUMNS = `
+  loc_d.name AS location_district_name, loc_c.name AS location_county_name,
+  loc_sc.name AS location_sub_county_name, loc_p.name AS location_parish_name,
+  loc_v.name AS location_village_name
+`;
+
+async function findVisitorRowWithLocation(id) {
+  const [rows] = await getPool().query(
+    `SELECT v.*, ${LOCATION_JOIN_COLUMNS} FROM visitors v ${LOCATION_JOINS} WHERE v.id = ?`,
+    [id]
+  );
+  return rows[0] ?? null;
+}
 
 function normalizePhone(value = "") {
   return value.replace(/[\s()-]/g, "").replace(/^0/, "+256");
@@ -42,6 +67,18 @@ function toApiVisitor(row, visitRows) {
     email: row.email ?? "",
     gender: row.gender ?? "",
     districtAddress: row.district_address ?? "",
+    location: {
+      districtId: row.district_id ? String(row.district_id) : "",
+      districtName: row.location_district_name ?? "",
+      countyId: row.county_id ? String(row.county_id) : "",
+      countyName: row.location_county_name ?? "",
+      subCountyId: row.sub_county_id ? String(row.sub_county_id) : "",
+      subCountyName: row.location_sub_county_name ?? "",
+      parishId: row.parish_id ? String(row.parish_id) : "",
+      parishName: row.location_parish_name ?? "",
+      villageId: row.village_id ? String(row.village_id) : "",
+      villageName: row.location_village_name ?? "",
+    },
     invitedBy: row.invited_by ?? "",
     prayerRequest: row.prayer_request ?? "",
     permissionToContact: Boolean(row.permission_to_contact),
@@ -52,7 +89,9 @@ function toApiVisitor(row, visitRows) {
 }
 
 export async function listApiVisitors() {
-  const [rows] = await getPool().query("SELECT * FROM visitors ORDER BY first_name ASC, last_name ASC");
+  const [rows] = await getPool().query(
+    `SELECT v.*, ${LOCATION_JOIN_COLUMNS} FROM visitors v ${LOCATION_JOINS} ORDER BY v.first_name ASC, v.last_name ASC`
+  );
   const visitsByVisitor = await getPool().query(
     `SELECT vv.*, s.name AS service_name FROM visitor_visits vv
      LEFT JOIN services s ON s.id = vv.service_id
@@ -69,7 +108,7 @@ export async function listApiVisitors() {
 }
 
 export async function getApiVisitorById(id) {
-  const row = await findVisitorById(id);
+  const row = await findVisitorRowWithLocation(id);
   if (!row) return null;
   const visits = await getVisitsWithServiceName(id);
   return toApiVisitor(row, visits);

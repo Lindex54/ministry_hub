@@ -7,10 +7,28 @@ const COLUMN_MAP = {
   firstName: "first_name", lastName: "last_name", preferredName: "preferred_name",
   gender: "gender", dateOfBirth: "date_of_birth", profilePhoto: "profile_photo",
   primaryPhone: "primary_phone", alternativePhone: "alternative_phone", email: "email",
-  district: "district", address: "address", dateJoined: "date_joined", status: "status",
+  district: "district", address: "address",
+  districtId: "district_id", countyId: "county_id", subCountyId: "sub_county_id",
+  parishId: "parish_id", villageId: "village_id",
+  dateJoined: "date_joined", status: "status",
   emergencyName: "emergency_name", emergencyRelationship: "emergency_relationship",
   emergencyPhone: "emergency_phone",
 };
+
+// Uganda administrative location hierarchy (district -> village) is optional
+// on every member — these joins just resolve the selected IDs to names.
+const LOCATION_JOINS = `
+  LEFT JOIN districts loc_d ON loc_d.id = m.district_id
+  LEFT JOIN counties loc_c ON loc_c.id = m.county_id
+  LEFT JOIN sub_counties loc_sc ON loc_sc.id = m.sub_county_id
+  LEFT JOIN parishes loc_p ON loc_p.id = m.parish_id
+  LEFT JOIN villages loc_v ON loc_v.id = m.village_id
+`;
+const LOCATION_JOIN_COLUMNS = `
+  loc_d.name AS location_district_name, loc_c.name AS location_county_name,
+  loc_sc.name AS location_sub_county_name, loc_p.name AS location_parish_name,
+  loc_v.name AS location_village_name
+`;
 
 function toApiMember(row, ministryNames) {
   return {
@@ -27,6 +45,18 @@ function toApiMember(row, ministryNames) {
     email: row.email ?? "",
     district: row.district ?? "",
     address: row.address ?? "",
+    location: {
+      districtId: row.district_id ? String(row.district_id) : "",
+      districtName: row.location_district_name ?? "",
+      countyId: row.county_id ? String(row.county_id) : "",
+      countyName: row.location_county_name ?? "",
+      subCountyId: row.sub_county_id ? String(row.sub_county_id) : "",
+      subCountyName: row.location_sub_county_name ?? "",
+      parishId: row.parish_id ? String(row.parish_id) : "",
+      parishName: row.location_parish_name ?? "",
+      villageId: row.village_id ? String(row.village_id) : "",
+      villageName: row.location_village_name ?? "",
+    },
     branch: row.branch_name ?? "",
     dateJoined: row.date_joined ?? "",
     status: row.status,
@@ -61,8 +91,9 @@ export async function listApiMembers({ branchId, status } = {}) {
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
 
   const [rows] = await getPool().query(
-    `SELECT m.*, b.name AS branch_name FROM members m
+    `SELECT m.*, b.name AS branch_name, ${LOCATION_JOIN_COLUMNS} FROM members m
      LEFT JOIN branches b ON b.id = m.branch_id
+     ${LOCATION_JOINS}
      ${where}
      ORDER BY m.first_name ASC, m.last_name ASC`,
     params
@@ -73,8 +104,9 @@ export async function listApiMembers({ branchId, status } = {}) {
 
 export async function getApiMemberById(id) {
   const [rows] = await getPool().query(
-    `SELECT m.*, b.name AS branch_name FROM members m
+    `SELECT m.*, b.name AS branch_name, ${LOCATION_JOIN_COLUMNS} FROM members m
      LEFT JOIN branches b ON b.id = m.branch_id
+     ${LOCATION_JOINS}
      WHERE m.id = ?`,
     [id]
   );
