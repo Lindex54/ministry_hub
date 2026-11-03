@@ -14,6 +14,7 @@ import { PageHeader, ResponsiveGrid } from "@/components/shared/PageHeader";
 import { StatCard } from "@/components/shared/StatCard";
 import { useAuth } from "@/providers/AuthProvider";
 import { api } from "@/lib/api";
+import { UserSecurityDialog } from "./UserSecurityDialog";
 
 const ACTIONS = ["Login", "Logout", "View", "Create", "Update", "Delete", "Action"];
 
@@ -48,6 +49,7 @@ export function AuditLogsPage() {
   const [outcome, setOutcome] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [securityUserId, setSecurityUserId] = useState(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => { setPage(1); setDebouncedSearch(search.trim()); }, 300);
@@ -104,7 +106,7 @@ export function AuditLogsPage() {
               <TableBody>
                 {logs.length ? logs.map((log) => <TableRow key={log.id}>
                   <TableCell><p className="font-medium">{formatTimestamp(log.created_at)}</p><p className="text-xs text-muted-foreground">{log.method}</p></TableCell>
-                  <TableCell><p className="font-medium">{log.actor_name || "Unknown user"}</p><p className="text-xs text-muted-foreground">{log.actor_username ? `@${log.actor_username}` : log.actor_role || "Role unavailable"}</p></TableCell>
+                  <TableCell>{log.user_id || log.resolved_user_id ? <Button type="button" variant="link" className="h-auto p-0 font-semibold" onClick={() => setSecurityUserId(String(log.user_id || log.resolved_user_id))}>{log.actor_name || "Unknown user"}</Button> : <p className="font-medium">{log.actor_name || "Unknown user"}</p>}<p className="text-xs text-muted-foreground">{log.actor_username ? `@${log.actor_username}` : log.actor_role || "Role unavailable"}</p></TableCell>
                   <TableCell><Badge variant={actionVariant(log.action)}>{log.action}</Badge></TableCell>
                   <TableCell><p className="font-medium capitalize">{log.resource.replaceAll("-", " ")}{log.resource_id ? ` #${log.resource_id}` : ""}</p><p className="max-w-72 truncate text-xs text-muted-foreground" title={log.path}>{log.path}</p></TableCell>
                   <TableCell>{log.outcome === "Success" ? <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="size-4" />{log.status_code}</span> : <span className="inline-flex items-center gap-1.5 text-sm font-medium text-destructive"><XCircle className="size-4" />{log.status_code}</span>}</TableCell>
@@ -121,5 +123,6 @@ export function AuditLogsPage() {
         </div>
       </CardContent>
     </Card>
+    <UserSecurityDialog userId={securityUserId} open={Boolean(securityUserId)} onOpenChange={(open) => { if (!open) setSecurityUserId(null); }} />
   </div>;
 }
